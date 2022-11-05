@@ -24,18 +24,8 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 
 [outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP, datatype_INP, DT_INP, datafilename1_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP, topmodelsx_INP, M_INP, flag1_INP]=options
 
-
 [getperformance_INP, deletetempfiles_INP, forecastingperiod_INP, printscreen1_INP, weight_type1_INP]=options_forecast
 
-% <============================================================================>
-% <================================ Dataset =====================================>
-% <============================================================================>
-
-
-
-% <============================================================================>
-% <================================ Dataset =====================================>
-% <============================================================================>
 
 outbreakx=outbreakx_INP;
 
