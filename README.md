@@ -17,7 +17,7 @@
     <li>fitting models using different parameter estimation approaches (least-squares, maximum likelihood estimation),</li>
     <li>fitting models using assuming different error structures (normal, Poisson, negagive binomial),</li>
     <li>user can select the underlying function for the sub-epidemic building block (generalized-logistic model, Richards model, Gompertz model),</li>
-    <li>user can select whether the sub-epidemics start synchronously at time 0 or asynchronously at different times as defined by parameter C_thr.</li>
+    <li>user can select two different decline functions for sub-epidemic sizes: Exponential and Power-law.</li>
     
 </ul>
     
@@ -27,7 +27,7 @@ The n-subepidemic framework toolbox requires a MATLAB installation.
 
 # Fitting the model to your data
 
-To use the toolbox to fit the ensemble n-subepidemic framework to your data, you just need to:
+To use the toolbox to fit the spatial wave sub-epidemic framework to your data, you just need to:
 
 <ul>
     <li>download the code </li>
@@ -35,7 +35,7 @@ To use the toolbox to fit the ensemble n-subepidemic framework to your data, you
     <li>create output folder where the output files will be stored</li>   
     <li>open a MATLAB session </li>
     <li>define the model parameter values and time series parameters by editing <code>options.m</code> </li>
-    <li>run the function <code>Run_subepidemicFramework.m</code> </li>
+    <li>run the function <code>Run_SW_subepidemicFramework.m</code> </li>
 </ul>
   
 # Plotting the fits of the top-ranked models and parameter estimates
@@ -44,7 +44,7 @@ After fitting the model to your data, you can use the toolbox to plot the model 
 
 <ul>
     <li>define the model parameter values and time series parameters by editing <code>options.m</code></li>
-    <li>run the function <code>plotFit_subepidemicFramework.m</code> </li>
+    <li>run the function <code>plotFit_SW_subepidemicFramework.m</code> </li>
 </ul>
     
 # Plotting the top-ranked subepidemic model profiles and the corresponding AIC values
@@ -53,7 +53,7 @@ After fitting the model to your data, you can use the toolbox to plot the subepi
 
 <ul>
     <li>define the model parameter values and time series parameters by editing <code>options.m</code></li>
-    <li>run the function <code>plotRankings_subepidemicFramework.m</code></li>
+    <li>run the function <code>plotRankings_SW_subepidemicFramework.m</code></li>
 </ul>
     
 # Generating and plotting forecasts of the top-ranked and ensemble subepidemic models
