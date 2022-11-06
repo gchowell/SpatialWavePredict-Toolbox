@@ -16,7 +16,7 @@
 <ul>
     <li>fitting models using different parameter estimation approaches (least-squares, maximum likelihood estimation),</li>
     <li>fitting models using assuming different error structures (normal, Poisson, negagive binomial),</li>
-    <li>user can select the underlying function for the sub-epidemic building block (generalized-logistic model, Richards model, Gompertz model),</li>
+    <li>user can select the underlying function for the sub-epidemic building block (generalized-logistic model, Richards model, generalized Richards model (GRM), Gompertz model),</li>
     <li>user can select two different decline functions for sub-epidemic sizes: Exponential and Power-law.</li>
     
 </ul>
