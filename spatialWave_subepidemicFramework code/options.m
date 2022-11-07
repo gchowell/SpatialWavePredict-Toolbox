@@ -21,23 +21,34 @@ global calibrationperiod1
 
 
 % <============================================================================>
-% <================================ Datasets properties =============================>
+% <================================ Datasets properties =======================>
 % <============================================================================>
 
-outbreakx=52; % identifier for spatial area
+% The time series data file can contain one or more time series (one per
+% column in the file). Each column could correspond to different geographic areas so that rows correspond to time points and columns 
+% correspond to spatial areas. For instance, each column could correspond to different states in
+% the U.S or countries in the world.
 
-caddate1='05-11-20'; % data file time stamp
+% The name of the time series data file follows the following format:
 
-cadregion='USA'; % string indicating the region of the time series (USA, Chile, Mexico, Nepal, etc)
+% 'cumulative-<cadtemporal>-<caddisease>-<datatype>-<cadregion>-<caddate1>.txt');
+%  For example: 'cumulative-daily-coronavirus-deaths-USA-05-31-20.txt'
+% where:
 
-caddisease='coronavirus'; % string indicating the name of the disease
+outbreakx=52;  % identifier for the spatial area of interest
+
+caddate1='05-11-20';  % data file time stamp in format: mm-dd-yy
+
+cadregion='USA'; % string indicating the geographic region of the time series contained in the file (Georgia, USA, World, Asia, Africa, etc.)
+
+caddisease='coronavirus'; % string indicating the name of the disease related to the time series data
 
 datatype='cases'; % string indicating the nature of the data (cases, deaths, hospitalizations, etc)
 
 DT=1; % temporal resolution in days (1=daily data, 7=weekly data).
 
 if DT==1
-    cadtemporal='daily';
+    cadtemporal='daily'; % string indicating the temporal resolution of the data 
 elseif DT==7
     cadtemporal='weekly';
 end
@@ -45,9 +56,9 @@ end
 % Name of the file containing the cumulative time series data (rows=time, cols=regions)
 datafilename1=strcat('cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',caddate1,'.txt'); %data file with all time series across areas/regions
 
-datevecfirst1=[2020 02 27]; % date corresponding to the first data point in time series data
+datevecfirst1=[2020 02 27]; % date corresponding to the first data point in time series data in format [year_number month_number day_number]
 
-datevecend1=[2021 05 31]; % date of the most recent data file which is accessed to assess forecast performance
+datevecend1=[2022 05 09]; % date of the most recent data file in format [year_number month_number day_number]. This data file is accessed to assess forecast performance 
 
 % <============================================================================>
 % <============================Adjustments to data =================================>
@@ -55,7 +66,7 @@ datevecend1=[2021 05 31]; % date of the most recent data file which is accessed 
 
 smoothfactor1=1; % <smoothfactor1>-day rolling average smoothing of the case series
 
-calibrationperiod1=90; % calibrates model using the most recent <calibrationperiod1> days  where calibrationperiod1<length(data1)
+calibrationperiod1=90; % calibrates model using the most recent <calibrationperiod1> data points where <calibrationperiod> does not exceed the length of the time series data.
 
 % <=============================================================================>
 % <=========================== Statistical method ====================================>
@@ -94,7 +105,8 @@ if npatches_fixed==1
     topmodelsx=1;
 end
 
-flag1=1; %type of growth model used to describe a subepidemic
+flag1=1; % Type of growth model used to model a subepidemic
+
 % 0 = GGM
 % 1 = GLM
 % 2 = GRM
@@ -103,4 +115,4 @@ flag1=1; %type of growth model used to describe a subepidemic
 
 onset_fixed=0; % flag to indicate if the onset timing of subepidemics fixed at time 0 (onset_fixed=1) or not (onset_fixed=0).
 
-typedecline2=[1 2]; % 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
+typedecline2=[1 2]; % Type of functional decline for the sequential sub-epidemic sizes where 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
