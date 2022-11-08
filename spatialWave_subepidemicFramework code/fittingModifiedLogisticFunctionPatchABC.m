@@ -365,6 +365,20 @@ typedecline1=RMSES(index1,3);
 
 AICc_best=RMSES(index1,4);
 
+ %-->If we have a series of AICc  (or wSSE) values from N different models sorted from lowest (best model) 
+ %to highest (worst model), I am wondering if we could define a proper threshold criterion to drop models with associated AICc (or wSSE) value greater than some threshold criteria.
+
+% -->Let AICmin denote the minimun AIC from several models. 
+% The quantity exp((AICmin − AICi)/2) is interpreted as the relative likelihood of model i. 
+% We can set an alpha (e.g., 0.05), drop the models with exp((AICmin − AICi)/2) smaller than alpha, 
+% and combine other models with weighted average, 
+% where the weight is proportional to exp((AICmin − AICi)/2). This is another way to assign weights,
+% compared to 1/SSE. 
+
+AICmin=RMSES(1,4);
+
+relativelik_i=exp((AICmin-RMSES(:,4))/2);
+
 
 % <=============================================================================================>
 % <============================ Get the best fit resultls ======================================>

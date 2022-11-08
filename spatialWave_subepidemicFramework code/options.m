@@ -58,7 +58,7 @@ datafilename1=strcat('cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',c
 
 datevecfirst1=[2020 02 27]; % date corresponding to the first data point in time series data in format [year_number month_number day_number]
 
-datevecend1=[2022 05 09]; % date of the most recent data file in format [year_number month_number day_number]. This data file is accessed to assess forecast performance 
+datevecend1=[2021 05 31]; % date of the most recent data file in format [year_number month_number day_number]. This data file is accessed to assess forecast performance 
 
 % <============================================================================>
 % <============================Adjustments to data =================================>

@@ -1,5 +1,4 @@
-
-%% Plot model fits for the best fitting models
+% Plot model fits for the best fitting models
 
 clear
 clear

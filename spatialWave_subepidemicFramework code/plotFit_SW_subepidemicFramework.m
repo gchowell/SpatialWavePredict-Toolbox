@@ -1,4 +1,4 @@
-%% Plot model fits and derive performance metrics during the calibration period for the best fitting models
+% Plot model fits and derive performance metrics during the calibration period for the best fitting models
 
 clear
 clear global
@@ -274,7 +274,7 @@ for rank1=1
     
     
     xlabel('Time (days)')
-    ylabel('Case incidence')
+    ylabel(strcat(caddisease,{' '},datatype))
     
     axis([timevect(1) timevect(end)+1 0 max(data(:,2))*1.3])
     
@@ -577,7 +577,7 @@ for realization=1:M
 end
 
 xlabel('\fontsize{16}Time (days)');
-ylabel('\fontsize{16}Case incidence')
+ylabel(strcat(caddisease,{' '},datatype))
 
 line1=plot(data(:,1)*DT,data(:,2),'ko')
 set(line1,'LineWidth',2)
