@@ -259,7 +259,7 @@ plot(timevect,totinc,'r')
 hold on
 plot(timevect,data,'bo')
 xlabel('Time (days)');
-ylabel('Data and fit')
+ylabel('Incidence')
 
 
 % <=============================================================================================>
