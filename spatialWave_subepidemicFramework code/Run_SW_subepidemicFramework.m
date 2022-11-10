@@ -27,7 +27,7 @@ global calibrationperiod1
 % <================================ Datasets properties =============================>
 % <==================================================================================>
 
-if length(outbreakx_pass)>0
+if exist('outbreakx_pass','var')==1
 
     outbreakx=outbreakx_pass;
 else
