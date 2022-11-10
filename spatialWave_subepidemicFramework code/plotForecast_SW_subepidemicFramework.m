@@ -438,17 +438,6 @@ for run_id=-1
         end
 
 
-        % <=============================================================================================>
-        % <============================== Save file with forecast ======================================>
-        % <=============================================================================================>
-
-        forecastdata=[str2num(datestr((datenumIni:1:datenumEnd)','mm')) str2num(datestr((datenumIni:1:datenumEnd)','dd')) [data1(:,2);zeros(forecastingperiod,1)+NaN] median(curvesforecasts2,2) LB1' UB1'];
-
-        T = array2table(forecastdata);
-        T.Properties.VariableNames(1:6) = {'month','day','data','median','LB','UB'};
-        writetable(T,strcat('ranked(', num2str(rank1),')-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
-
-
 
         if printscreen1
 
@@ -556,11 +545,34 @@ for run_id=-1
                 set(line2,'LineWidth',2)
 
             end
+
+            % <=============================================================================================>
+            % <============================== Save file with forecast ======================================>
+            % <=============================================================================================>
+
+            forecastdata=[str2num(datestr((datenumIni:1:datenumEnd)','mm')) str2num(datestr((datenumIni:1:datenumEnd)','dd')) [data1(:,2);data2] median(curvesforecasts2,2) LB1' UB1'];
+
+            T = array2table(forecastdata);
+            T.Properties.VariableNames(1:6) = {'month','day','data','median','LB','UB'};
+            writetable(T,strcat('./output/ranked(', num2str(rank1),')-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
+
         else
 
             timevect2=[];
 
             data2=[];
+
+            % <=============================================================================================>
+            % <============================== Save file with forecast ======================================>
+            % <=============================================================================================>
+
+            forecastdata=[str2num(datestr((datenumIni:1:datenumEnd)','mm')) str2num(datestr((datenumIni:1:datenumEnd)','dd')) [data1(:,2);zeros(forecastingperiod,1)+NaN] median(curvesforecasts2,2) LB1' UB1'];
+
+            T = array2table(forecastdata);
+            T.Properties.VariableNames(1:6) = {'month','day','data','median','LB','UB'};
+            writetable(T,strcat('./output/ranked(', num2str(rank1),')-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
 
         end
 
