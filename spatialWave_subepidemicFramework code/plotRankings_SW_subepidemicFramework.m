@@ -25,6 +25,7 @@ global smoothfactor1 calibrationperiod1
 % <=================== Load parameter values supplied by user =================>
 % <============================================================================>
 
+% options.m
 [outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP,datafilename1_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
 
 
@@ -240,29 +241,9 @@ for run_id=-1
         
         
         [~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[],r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
-        %x=ode5(@modifiedLogisticGrowthPatch,timevect,IC,r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1);
         
-        
-        invasions
-        
-        %     if sum(invasions)<npatches
-        %
-        %         invasions
-        %
-        %
-        %         npatches=sum(invasions);
-        %
-        %         P=[rs_hat(1:npatches) ps_hat(1:npatches) as_hat(1:npatches) Ks_hat(1:npatches) alpha_hat d_hat];
-        %
-        %         PS(index1,:)=0;
-        %
-        %         PS(index1,1:length(P))=P;
-        %
-        %         RMSES(index1,1)=npatches;
-        %
-        %     end
-        %
-        
+       
+  
         for j=1:npatches
             
             incidence1=[x(1,j);diff(x(:,j))];
@@ -340,7 +321,6 @@ for run_id=-1
         [npatches onset_thr]
         
         factor1
-        
         
         
     end

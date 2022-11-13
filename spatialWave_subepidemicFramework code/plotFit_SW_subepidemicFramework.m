@@ -22,6 +22,7 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 % <=================== Load parameter values supplied by user =================>
 % <============================================================================>
 
+% options.m
 [outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP,datafilename1_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
 
 % <============================================================================>

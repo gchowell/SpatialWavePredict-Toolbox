@@ -21,8 +21,10 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 % <================== Load the parameter values ===============================>
 % <============================================================================>
 
+% options.m
 [outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP, datatype_INP, DT_INP, datafilename1_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP, topmodelsx_INP, M_INP, flag1_INP]=options
 
+% options_forecast.m
 [getperformance_INP, deletetempfiles_INP, forecastingperiod_INP, printscreen1_INP, weight_type1_INP]=options_forecast
 
 
@@ -165,57 +167,14 @@ npatches=npatches_fixed;
 cc1=1;
 
 for run_id=-1
-    %for run_id=0:1:58
 
     cc1=1;
 
     close all
 
-    %i=(run_id)*30+1;
-    %ARIMA_mean1=ARIMAforecasts(i:1:i+forecastingperiod-1,1);
-    %ARIMA_lb1=ARIMAforecasts(i:1:i+forecastingperiod-1,11);
-    %ARIMA_ub1=ARIMAforecasts(i:1:i+forecastingperiod-1,end-1);
+    run_id=0;
 
-
-    run_id
-
-    if run_id==-1
-        %outbreakx=52;
-
-        run_id=0;
-
-        %caddate1='04-20-20';
-        %caddate1='05-11-20';
-        %caddate1='06-08-20';
-        %caddate1='03-22-21';
-
-        cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1);
-
-    else
-
-        %
-
-        datenum1=datenum(caddatex);
-
-        %state_id = rem(run_id,52)+1;
-        state_id = 52;
-
-        nm=fix(run_id/52);
-        %date_id = datetime(caddatex) + caldays(nm);
-        date_id = datetime(caddatex) + run_id*7;
-
-        date=datestr(date_id,'mm-dd-yy');
-
-        outbreakx=state_id;
-
-        caddate1=date;
-
-        cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1);
-
-
-        %
-    end
-
+    cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1);
 
     for rankx=topmodels1
 
@@ -224,7 +183,6 @@ for run_id=-1
         % <========================================================================================>
 
         load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-0-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rankx),'.mat'))
-
 
         if npatches>1
 
@@ -236,7 +194,6 @@ for run_id=-1
         d_hat=1;
 
         cc3=1;
-
 
         % <========================================================================================>
         % <================================ Compute short-term forecast ==================================>
@@ -262,10 +219,8 @@ for run_id=-1
 
         end
 
-
         % generate forecast curves from each bootstrap realization
         for realization=1:M
-
 
             r_hat=Phatss(realization,1);
             p_hat=Phatss(realization,2);
@@ -372,9 +327,6 @@ for run_id=-1
             set(line1,'LineWidth',2)
 
 
-            %title(getUSstateName(outbreak2))
-
-
             axis([0 length(timevect2)-1 0 max(data1(:,2))*2])
 
 
@@ -384,10 +336,6 @@ for run_id=-1
             line1=plot(line2(:,1),line2(:,2),'k--')
             set(line1,'LineWidth',2)
 
-
-            %wave=[2020 2 27 2020 9 08];
-
-            %caddate1=caddate1(6:end);
 
             datenum1=datenum([str2num(caddate1(7:8))+2000 str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
 
