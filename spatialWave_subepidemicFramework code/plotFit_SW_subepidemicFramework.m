@@ -296,8 +296,7 @@ for rank1=topmodels1
     h(1).FaceColor = [1 1 1];
     h(2).FaceColor = [0.8 0.8 0.8];
 
-    line1=plot(timevect,median(curves,2),'k--')  % asymptotic mean
-    %line1=plot(timevect,bestfit,'r-')  %LSQ fit
+    line1=plot(timevect,median(curves,2),'k--') 
 
     set(line1,'LineWidth',2)
 
@@ -626,7 +625,6 @@ set(gcf,'color','white')
 % <========================================================================================>
 % <============ Plot estimated number of sub-epidemics and total epidemic size across top-ranked models============>
 % <========================================================================================>
-
 
 figure(500)
 subplot(1,2,1)
