@@ -1,4 +1,4 @@
-% Generate short-term forecasts - cases - incidence
+% Generate short-term forecasts - incidence
 
 close all
 clear

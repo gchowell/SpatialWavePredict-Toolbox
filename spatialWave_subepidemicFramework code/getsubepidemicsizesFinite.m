@@ -47,8 +47,6 @@ else
                 Ks=[Ks;K];
             end
 
-
-
         case 2
 
             n=floor((C_thr/K0).^(-1/q));     %inverse decline
