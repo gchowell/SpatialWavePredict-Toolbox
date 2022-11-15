@@ -5,7 +5,7 @@ function [getperformance, deletetempfiles, forecastingperiod, printscreen1, weig
 % <========================== Forecasting parameters ===================================>
 % <==============================================================================>
 
-getperformance=0; % flag or indicator variable (1/0) to calculate forecasting performance or not
+getperformance=1; % flag or indicator variable (1/0) to calculate forecasting performance or not
 
 deletetempfiles=1; %flag or indicator variable (1/0) to delete Forecast..mat files from the output folder after use
 

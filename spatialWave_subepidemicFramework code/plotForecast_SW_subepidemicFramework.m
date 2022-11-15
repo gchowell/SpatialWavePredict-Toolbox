@@ -635,7 +635,118 @@ for run_id=-1
 
 end
 
-if run_id>=0
-    % save(strcat('./output/performStats-modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-0-smoothing-',num2str(smoothfactor1),'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-dateini-',datestr(datenum(caddatex),'mm-dd-yy'),'-ndays-',num2str(ndays),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-forecastingperiod-',num2str(forecastingperiod),'-topmodels-',num2str(topmodels1(end)),'.mat'))
+if getperformance
+
+    % <============================================================================>
+    % <=================plot forecasting performance metrics for the top-ranked models ==============>
+    % <============================================================================>
+
+    index1=find(MAEFSS(:,1)>=100);
+
+    index2=setdiff(1:length(MAEFSS(:,1)),index1);
+
+    figure(400)
+
+    subplot(2,2,1)
+    line1=plot(MAEFSS(index2,1),MAEFSS(index2,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('i_{th}Ranked Model')
+    ylabel('MAE')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    subplot(2,2,2)
+    line1=plot(MSEFSS(index2,1),MSEFSS(index2,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('i_{th}Ranked Model')
+    ylabel('MSE')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    subplot(2,2,3)
+    line1=plot(PIFSS(index2,1),PIFSS(index2,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('i_{th}Ranked Model')
+    ylabel('Coverage of the 95% PI')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    subplot(2,2,4)
+
+    line1=plot(WISFSS(index2,1),WISFSS(index2,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('i_{th}Ranked Model')
+    ylabel('WIS')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    % <=============================================================================================>
+    % <========================== Save file with top-ranked models' forecasting performance metrics ===================>
+    % <=============================================================================================>
+
+    performance=[topmodels1' MAEFSS(index2,4) MSEFSS(index2,4) PIFSS(index2,4) WISFSS(index2,4)];
+
+    T = array2table(performance);
+    T.Properties.VariableNames(1:5) = {'i_th-ranked model','MAE','MSE','Coverage 95%PI','WIS'};
+    writetable(T,strcat('./output/performance-forecasting-topRanked-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
+    % <============================================================================>
+    % <=================plot forecasting performance metrics of the ensemble models ==============>
+    % <============================================================================>
+
+    figure(401)
+
+    subplot(2,2,1)
+    line1=plot(1:length(index1),MAEFSS(index1,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('Ensemble(i) model')
+    ylabel('MAE')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    subplot(2,2,2)
+    line1=plot(1:length(index1),MSEFSS(index1,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('Ensemble(i) model')
+    ylabel('MSE')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    subplot(2,2,3)
+    line1=plot(1:length(index1),PIFSS(index1,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('Ensemble(i) model')
+    ylabel('Coverage of the 95% PI')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    subplot(2,2,4)
+
+    line1=plot(1:length(index1),WISFSS(index1,4),'k-o')
+    set(line1,'linewidth',2)
+    xlabel('Ensemble(i) model')
+    ylabel('WIS')
+
+    set(gca,'FontSize', 16);
+    set(gcf,'color','white')
+
+    % <=============================================================================================>
+    % <=========================== Save file with ensemble forecasting performance metrics =========================>
+    % <=============================================================================================>
+
+    performance=[(1:length(index1))' MAEFSS(index1,4) MSEFSS(index1,4) PIFSS(index1,4) WISFSS(index1,4)];
+
+    T = array2table(performance);
+    T.Properties.VariableNames(1:5) = {'Ensemble(i) model','MAE','MSE','Coverage 95%PI','WIS'};
+    writetable(T,strcat('./output/performance-forecasting-Ensemble-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 end
+
+
