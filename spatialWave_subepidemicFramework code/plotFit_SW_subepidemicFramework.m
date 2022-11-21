@@ -144,7 +144,7 @@ for rank1=topmodels1
 
     AICc_bests=[AICc_bests;AICc_best];
 
-    timevect=(data1(:,1))*DT;
+    timevect=(data1(:,1));
 
     % <========================================================================================>
     % <================================ Parameter estimates =========================================>
@@ -188,7 +188,7 @@ for rank1=topmodels1
 
 
     figure(100+rank1)
-    timevect=(data1(:,1))*DT;
+    timevect=data1(:,1);
 
     subplot(2,4,1)
     hist(Phatss(:,1))
@@ -435,7 +435,7 @@ for rank1=topmodels1
     xlabel('\fontsize{16}Time');
     ylabel(strcat(caddisease,{' '},datatype))
 
-    line1=plot(data(:,1)*DT,data(:,2),'ko')
+    line1=plot(data(:,1),data(:,2),'ko')
     set(line1,'LineWidth',2)
 
     axis([timevect(1) timevect(end)+1 0 max(data(:,2))*1.3])

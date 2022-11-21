@@ -154,26 +154,43 @@ for run_id=-1
         
         
     end
-    
+
 
 
     figure(100)
-    
+
     color1=['r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';];
-    
-    
+
+
+    factors=factor(length(topmodels1));
+
+
+    if length(factors)==1
+        rows=factors;
+        cols=1;
+
+    elseif length(factors)==3
+        rows=factors(1)*factors(2);
+        cols=factors(3);
+    else
+        rows=factors(1);
+        cols=factors(2);
+    end
+
+
+
     for index1=topmodels1
-        
-        
-        subplot(2,2,index1)
-        
+
+
+        subplot(rows,cols,index1)
+
         npatches=RMSES(index1,1);
-        
+
         onset_thr=RMSES(index1,2);
-        
+
         typedecline1=RMSES(index1,3);
-        
-        
+
+
         AICc_best=RMSES(index1,4);
         
         
@@ -327,10 +344,12 @@ for run_id=-1
 end
 
 
-subplot(2,2,3)
-xlabel('Time (days)');
+for j=1:cols
 
-subplot(2,2,4)
-xlabel('Time (days)');
+    subplot(rows,cols,topmodels1(end-j+1))
+    xlabel('Time');
+
+end
+
 
 %save(strcat('./output/AICc_bests-modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-0-smoothing-',num2str(smoothfactor1),'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-dateini-',datestr(datenum(caddatex),'mm-dd-yy'),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-topmodels-',num2str(topmodels1(end)),'.mat'),'AICc_bests','-mat')

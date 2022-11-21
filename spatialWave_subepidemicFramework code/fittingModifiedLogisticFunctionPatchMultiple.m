@@ -87,7 +87,7 @@ data=data1(:,2);
 
 [max1,index1]=max(data);
 
-timevect=(data1(:,1))*DT;
+timevect=data1(:,1);
 
 r=P0(1);
 
