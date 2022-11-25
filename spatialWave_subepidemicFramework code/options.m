@@ -1,4 +1,4 @@
-function [outbreakx, caddate1, cadregion, caddisease,datatype, DT, datafilename1, datevecfirst1, datevecend1, numstartpoints,topmodelsx, M,flag1,typedecline2]=options
+function [outbreakx, caddate1, cadregion, caddisease,datatype, DT, datevecfirst1, datevecend1, numstartpoints,topmodelsx, M,flag1,typedecline2]=options
 
 % parameter values for the Spatial wave sub-epidemic framework.
 
@@ -25,11 +25,11 @@ global calibrationperiod1
 % The name of the time series data file follows the following format:
 
 % 'cumulative-<cadtemporal>-<caddisease>-<datatype>-<cadregion>-<caddate1>.txt');
-%  For example: 'cumulative-daily-coronavirus-deaths-USA-05-11-20.txt'
+%  For example: 'cumulative-daily-coronavirus-deaths-USA-05-11-2020.txt'
 
 outbreakx=52;  % identifier for the spatial area of interest
 
-caddate1='05-11-20';  % data file time stamp in format: mm-dd-yy
+caddate1='05-11-2020';  % data file time stamp in format: mm-dd-yyyy
 
 cadregion='USA'; % string indicating the geographic region of the time series contained in the file (Georgia, USA, World, Asia, Africa, etc.)
 

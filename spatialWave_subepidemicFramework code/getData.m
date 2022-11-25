@@ -1,6 +1,6 @@
 function data2=getData(cadtemporal,caddisease,datatype,cadregion,DT,datevecfirst1,datevecend1,date1,outbreak1,forecastingperiod)
 
-filename1=strcat('./input/cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',datestr(datenum(datevecend1),'mm-dd-yy'),'.txt');
+filename1=strcat('./input/cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',datestr(datenum(datevecend1),'mm-dd-yyyy'),'.txt');
 
 data=load(filename1);
 

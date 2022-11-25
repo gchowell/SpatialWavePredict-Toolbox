@@ -20,7 +20,7 @@ global calibrationperiod1
 % <=================== Load parameter values supplied by user =================>
 % <============================================================================>
 
-[outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP,datafilename1_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
+[outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
 
 
 % <=================================================================================>
@@ -52,7 +52,7 @@ elseif DT==7
 end
 
 % Name of the file containing the cumulative time series data (rows=time, cols=regions)
-datafilename1=datafilename1_INP;
+datafilename1=strcat('cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',caddate1,'.txt'); %data file with all time series across areas/regions
 
 % Name of the file for the adjusted incidence data file for a specific region and
 % after removing early zeros.
