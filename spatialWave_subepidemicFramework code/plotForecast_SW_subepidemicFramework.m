@@ -367,7 +367,6 @@ for run_id=-1
 
             xticklabel_rotate;
 
-
             line1=plot(line2(:,1),line2(:,2),'k--')
             set(line1,'LineWidth',2)
 
@@ -453,6 +452,7 @@ for run_id=-1
             datenumEnd=datenum(wave(4:6))
 
             dates1=datestr(datenumIni:DT:datenumEnd,'mm-dd');
+
 
             if DT==1
 

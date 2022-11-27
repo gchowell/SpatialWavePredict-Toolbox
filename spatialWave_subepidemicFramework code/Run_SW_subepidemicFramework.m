@@ -60,6 +60,8 @@ datafilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-sta
 
 datevecfirst1=datevecfirst1_INP; % date corresponding to the first data point in time series data
 
+datevecend1=datevecend1_INP; % date of the most recent data file in format [year_number month_number day_number]. This data file is accessed to assess forecast performance
+
 % <============================================================================>
 % <============================Adjustments to data =================================>
 % <============================================================================>
@@ -122,6 +124,7 @@ end
 
 
 flag1=flag1_INP; %type of growth model used to describe a subepidemic
+
 % 0 = GGM
 % 1 = GLM
 % 2 = GRM

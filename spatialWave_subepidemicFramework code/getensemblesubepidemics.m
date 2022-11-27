@@ -102,7 +102,7 @@ if printscreen1
     figure(500)
     subplot(1,3,topmodels1(end)-1)
 
-    datenum1=datenum([str2num(caddate1(7:8))+2000 str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
+    datenum1=datenum([str2num(caddate1(7:10)) str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
 
     datevec1=datevec(datenum1+forecastingperiod*DT);
 
@@ -169,6 +169,7 @@ if printscreen1
 
     dates1=datestr(datenumIni:DT:datenumEnd,'mm-dd');
 
+
     if DT==1
 
         set(gca, 'XTick', 0:3:length(dates1(:,1))-1);
@@ -197,9 +198,9 @@ if getperformance
 
     % plot most recent data
 
-    datenum1=datenum([str2num(caddate1(7:8))+2000 str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
+    datenum1=datenum([str2num(caddate1(7:10)) str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
 
-    datenum1=datenum1+1;
+    datenum1=datenum1+DT;
 
     data2=getData(cadtemporal,caddisease,datatype,cadregion,DT,datevecfirst1,datevecend1,datenum1,outbreakx,forecastingperiod)
 

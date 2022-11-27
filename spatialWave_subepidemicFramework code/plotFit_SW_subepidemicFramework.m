@@ -46,6 +46,10 @@ end
 
 cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1);
 
+datevecfirst1=datevecfirst1_INP; % date corresponding to the first data point in time series data
+
+datevecend1=datevecend1_INP; % date of the most recent data file in format [year_number month_number day_number]. This data file is accessed to assess forecast performance
+
 
 % <============================================================================>
 % <============================Adjustments to data =================================>
