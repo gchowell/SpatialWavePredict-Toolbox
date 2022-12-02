@@ -29,7 +29,7 @@ global calibrationperiod1
 
 outbreakx=1;  % identifier for the spatial area of interest
 
-caddate1='11-16-2022';  % data file time stamp in format: mm-dd-yyyy
+caddate1='11-16-2022';  % time stamp of the data file in format: mm-dd-yyyy
 
 cadregion='USA'; % string indicating the geographic region of the time series contained in the file (Georgia, USA, World, Asia, Africa, etc.)
 
@@ -47,7 +47,8 @@ end
 
 datevecfirst1=[2022 05 10]; % date corresponding to the first data point in time series data in format [year_number month_number day_number]
 
-datevecend1=[2023 07 20]; % date of the most recent data file in format [year_number month_number day_number]. This data file is accessed to assess forecast performance
+datevecend1=[2023 07 20]; % time stamp of the most recent data file in format [year_number month_number day_number]. This data file is used to assess forecast performance
+
 
 % <============================================================================>
 % <============================Adjustments to data =================================>
@@ -90,19 +91,20 @@ M=300; % number of bootstrap realizations to characterize parameter uncertainty
 
 npatches_fixed=4; % maximum number of subepidemics considered in epidemic wave model fit
 
-if npatches_fixed==1  % if one sub-epidemic is employed, then there is only one model
+if npatches_fixed==1  % if one sub-epidemic is employed, then there is only one model (the one sub-epidemic model)
     topmodelsx=1;
 end
 
-flag1=1; % Type of growth model used to model a subepidemic
+GGM=0;  % 0 = GGM
+GLM=1;  % 1 = GLM
+GRM=2;  % 2 = GRM
+LM=3;   % 3 = LM
+RICH=4; % 4 = Richards
 
-% 0 = GGM
-% 1 = GLM
-% 2 = GRM
-% 3 = LM
-% 4 = Richards
+flag1=GLM; % Type of growth model used to model a subepidemic
 
 onset_fixed=0; % flag to indicate if the onset timing of subepidemics fixed at time 0 (onset_fixed=1) or not (onset_fixed=0).
 
 typedecline2=[1 2]; % Type of functional declines that will be considered for the sequential sub-epidemic sizes where 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
+
 

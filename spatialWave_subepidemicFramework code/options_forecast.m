@@ -5,17 +5,18 @@ function [getperformance, deletetempfiles, forecastingperiod, printscreen1, weig
 % <========================== Forecasting parameters ===================================>
 % <==============================================================================>
 
-getperformance=1; % flag or indicator variable (1/0) to calculate forecasting performance or not
+getperformance=1; % flag or indicator variable (1/0) to indicate whether we want to compute the forecasting performance metrics
 
-deletetempfiles=1; %flag or indicator variable (1/0) to delete Forecast..mat files from the output folder after use
+deletetempfiles=1; % flag or indicator variable (1/0) to indicate whether we want to delete Forecast..mat files from the output folder after use
 
-forecastingperiod=30; % forecast horizon (number of time points ahead)
+forecastingperiod=30; % forecast horizon (number of time units ahead)
 
-printscreen1=1;  % print plots with the results
+printscreen1=1;  % flag or indicator variable (1/0) to indicate whehther we want to print plots with the results
 
 % <==============================================================================>
 % <====================== weighting scheme for ensemble model ============================>
 % <==============================================================================>
 
-weight_type1=1; % -1= equally weighted from the top models, 0=based on AICc, 1= based on relative likelihood (Akaike weights), 2=based on WISC during calibration, 3=based on WISF during forecasting performance at previous time period (week)
+weight_type1=1; % -1= equally weighted ensemble from the top models, 0=ensemble weighted based on AICc, 1= ensemble weighted based on relative likelihood (Akaike weights), 
+% 2= ensemble weighted based on WISC during calibration, 3 = ensemble weighted based on WISF during forecasting performance at previous time period (week)
 
