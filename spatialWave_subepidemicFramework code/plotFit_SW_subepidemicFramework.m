@@ -447,7 +447,7 @@ for rank1=topmodels1
     set(gca,'FontSize',16)
     set(gcf,'color','white')
 
-    title('Sub-epidemic profile')
+    title(strcat(num2ordinal(rank1),' Ranked Model'))
 
     % <========================================================================================>
     % <================================ Store model fit quantiles ======================================>
@@ -505,6 +505,8 @@ for rank1=topmodels1
 
     xlabel('Number of sub-epidemics')
     ylabel('Frequency')
+
+    title(strcat(num2ordinal(rank1),' Ranked Model'))
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
