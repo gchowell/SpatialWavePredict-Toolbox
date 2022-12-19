@@ -1,4 +1,4 @@
-function Run_SW_subepidemicFramework(outbreakx_pass)
+function Run_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
 % <============================================================================>
 % <=================== Declare global variables =======================================>
@@ -27,6 +27,7 @@ global calibrationperiod1
 % <================================ Datasets properties =============================>
 % <==================================================================================>
 
+
 if exist('outbreakx_pass','var')==1
 
     outbreakx=outbreakx_pass;
@@ -35,7 +36,14 @@ else
 
 end
 
-caddate1=caddate1_INP;
+if exist('caddate1_pass','var')==1
+
+    caddate1=caddate1_pass;
+else
+    caddate1=caddate1_INP;
+
+end
+
 
 cadregion=cadregion_INP; % string indicating the region of the time series (USA, Chile, Mexico, Nepal, etc)
 
