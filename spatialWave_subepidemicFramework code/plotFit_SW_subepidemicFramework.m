@@ -1,8 +1,7 @@
-% Plot model fits and derive performance metrics during the calibration period for the best fitting models
 
-clear
-clear global
-close all
+function plotFit_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
+
+% Plot model fits and derive performance metrics during the calibration period for the best fitting models
 
 % <============================================================================>
 % <=================== Declare global variables =======================================>
@@ -27,8 +26,22 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 % <================================ Dataset ======================================>
 % <============================================================================>
 
-outbreakx=outbreakx_INP;
-caddate1=caddate1_INP;
+if exist('outbreakx_pass','var')==1
+
+    outbreakx=outbreakx_pass;
+else
+    outbreakx=outbreakx_INP;
+
+end
+
+if exist('caddate1_pass','var')==1
+
+    caddate1=caddate1_pass;
+else
+    caddate1=caddate1_INP;
+
+end
+
 
 cadregion=cadregion_INP; % string indicating the region of the time series (USA, Chile, Mexico, Nepal, etc)
 

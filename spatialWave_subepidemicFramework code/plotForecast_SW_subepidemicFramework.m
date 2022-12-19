@@ -1,7 +1,6 @@
-% Generate short-term forecasts - incidence
+function plotForecast_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
-close all
-clear
+% Generate short-term forecasts - incidence
 
 % <============================================================================>
 % <=================== Declare global variables =======================================>
@@ -27,10 +26,26 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 % options_forecast.m
 [getperformance_INP, deletetempfiles_INP, forecastingperiod_INP, printscreen1_INP, weight_type1_INP]=options_forecast
 
+% <============================================================================>
+% <================================ Dataset ======================================>
+% <============================================================================>
 
-outbreakx=outbreakx_INP;
+if exist('outbreakx_pass','var')==1
 
-caddate1=caddate1_INP;
+    outbreakx=outbreakx_pass;
+else
+    outbreakx=outbreakx_INP;
+
+end
+
+if exist('caddate1_pass','var')==1
+
+    caddate1=caddate1_pass;
+else
+    caddate1=caddate1_INP;
+
+end
+
 
 cadregion=cadregion_INP;
 
