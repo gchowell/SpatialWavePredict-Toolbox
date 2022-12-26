@@ -126,13 +126,14 @@ onset_thrs=onset_thrs(1:end-1);
 % <===== Set range of the possible number of subepidemics (1:npatches_fixed)=====>
 % <==============================================================================>
 
-
 RMSES=[];
 PS=[];
 
-%npatchess=1:1:npatches_fixed
-
-npatchess=[1 npatches_fixed];
+if onset_fixed==1
+    npatchess=1:1:npatches_fixed;
+elseif onset_fixed==0
+    npatchess=[1 npatches_fixed];
+end
 
 
 if (onset_fixed==1 | npatchess==1)
@@ -140,7 +141,6 @@ if (onset_fixed==1 | npatchess==1)
     onset_thrs=0;
 
 end
-
 
 onset_thrs2=onset_thrs;
 
