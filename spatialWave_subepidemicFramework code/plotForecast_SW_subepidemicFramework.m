@@ -1,3 +1,7 @@
+% <============================================================================>
+% < Author: Gerardo Chowell  ==================================================>
+% <============================================================================>
+
 function plotForecast_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
 % Generate short-term forecasts - incidence

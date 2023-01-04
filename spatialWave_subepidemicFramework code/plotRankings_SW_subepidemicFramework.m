@@ -1,3 +1,7 @@
+% <============================================================================>
+% < Author: Gerardo Chowell  ==================================================>
+% <============================================================================>
+
 function plotRankings_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
 % Plot model fits for the best fitting models
@@ -347,6 +351,7 @@ for run_id=-1
         [npatches onset_thr]
         
         factor1
+        
         
         
     end

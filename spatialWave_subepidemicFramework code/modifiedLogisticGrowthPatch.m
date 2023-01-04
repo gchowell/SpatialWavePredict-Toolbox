@@ -1,3 +1,7 @@
+% <============================================================================>
+% < Author: Gerardo Chowell  ==================================================>
+% <============================================================================>
+
 function dx=modifiedLogisticGrowthPatch(t,x,r,p,a,K,npatches,onset_thr,q,flag1,typedecline1)
 
 global invasions
