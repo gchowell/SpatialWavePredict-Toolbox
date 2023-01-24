@@ -681,6 +681,7 @@ if getperformance
 
     index1=find(MAEFSS(:,1)>=100);
 
+
     index2=setdiff(1:length(MAEFSS(:,1)),index1);
 
     figure(400)
@@ -739,7 +740,7 @@ if getperformance
     figure(401)
 
     subplot(2,2,1)
-    line1=plot(1:length(index1),MAEFSS(index1,4),'k-o')
+    line1=plot(1+(1:length(index1)),MAEFSS(index1,4),'k-o')
     set(line1,'linewidth',2)
     xlabel('Ensemble(i) model')
     ylabel('MAE')
@@ -748,7 +749,7 @@ if getperformance
     set(gcf,'color','white')
 
     subplot(2,2,2)
-    line1=plot(1:length(index1),MSEFSS(index1,4),'k-o')
+    line1=plot(1+(1:length(index1)),MSEFSS(index1,4),'k-o')
     set(line1,'linewidth',2)
     xlabel('Ensemble(i) model')
     ylabel('MSE')
@@ -757,7 +758,7 @@ if getperformance
     set(gcf,'color','white')
 
     subplot(2,2,3)
-    line1=plot(1:length(index1),PIFSS(index1,4),'k-o')
+    line1=plot(1+(1:length(index1)),PIFSS(index1,4),'k-o')
     set(line1,'linewidth',2)
     xlabel('Ensemble(i) model')
     ylabel('Coverage of the 95% PI')
@@ -767,10 +768,11 @@ if getperformance
 
     subplot(2,2,4)
 
-    line1=plot(1:length(index1),WISFSS(index1,4),'k-o')
+    line1=plot(1+(1:length(index1)),WISFSS(index1,4),'k-o')
     set(line1,'linewidth',2)
     xlabel('Ensemble(i) model')
     ylabel('WIS')
+
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
@@ -779,7 +781,7 @@ if getperformance
     % <=========================== Save file with ensemble forecasting performance metrics =========================>
     % <=============================================================================================>
 
-    performance=[(1:length(index1))' MAEFSS(index1,4) MSEFSS(index1,4) PIFSS(index1,4) WISFSS(index1,4)];
+    performance=[(1+(1:length(index1)))' MAEFSS(index1,4) MSEFSS(index1,4) PIFSS(index1,4) WISFSS(index1,4)];
 
     T = array2table(performance);
     T.Properties.VariableNames(1:5) = {'Ensemble(i) model','MAE','MSE','Coverage 95%PI','WIS'};
