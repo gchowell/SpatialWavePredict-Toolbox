@@ -11,7 +11,7 @@ deletetempfiles=1; % flag or indicator variable (1/0) to indicate whether we wan
 
 forecastingperiod=30; % forecast horizon (number of time units ahead)
 
-printscreen1=1;  % flag or indicator variable (1/0) to indicate whehther we want to print plots with the results
+printscreen1=1;  % flag or indicator variable (1/0) to indicate whether we want to print plots with the results
 
 % <==============================================================================>
 % <====================== weighting scheme for ensemble model ============================>
