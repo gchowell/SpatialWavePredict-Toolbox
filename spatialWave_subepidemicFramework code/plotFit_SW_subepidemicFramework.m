@@ -610,7 +610,7 @@ performance=[topmodels1' MAECSS(:,4) MSECSS(:,4) PICSS(:,4) WISCSS(:,4)];
 
 T = array2table(performance);
 T.Properties.VariableNames(1:5) = {'i_th-ranked model','MAE','MSE','Coverage 95%PI','WIS'};
-writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num2str(onset_fixed),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num2str(onset_fixed),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <============================================================================>
 % <=================plot model parmeters for the top-ranked models =========================>
@@ -661,7 +661,7 @@ performance=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2
 
 T = array2table(performance);
 T.Properties.VariableNames(1:13) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB'};
-writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <========================================================================================>
 % <============ Plot estimated number of sub-epidemics and total epidemic size across top-ranked models============>
