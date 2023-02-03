@@ -165,7 +165,11 @@ for outbreak1=outbreakx
 
     data1=dataprov(outbreak1,:)'; % Cumulative curve
 
-    data1=[data1(1);diff(data1)]; % Incidence curve
+    if strcmp('CUMULATIVE',upper(datafilename1(1:10)))==1
+
+        data1=[data1(1);diff(data1)]; % Incidence curve
+
+    end
 
     clear dataprov
     clear data
