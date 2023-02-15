@@ -124,7 +124,7 @@ cumcurve1=cumsum(smooth(data1(:,2),smoothfactor1));
 
 onset_thrs=linspace(cumcurve1(1),cumcurve1(end),length(data1(:,2)));
 
-onset_thrs=onset_thrs(1:end-1);
+onset_thrs=[0 onset_thrs(1:end-1)];
 
 % <==============================================================================>
 % <===== Set range of the possible number of subepidemics (1:npatches_fixed)=====>
