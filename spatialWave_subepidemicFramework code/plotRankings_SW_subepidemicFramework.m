@@ -91,6 +91,8 @@ cadfilename1=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-stat
 
 flag1=flag1_INP;
 
+typedecline2=typedecline2_INP; % 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
+
 % <==============================================================================>
 % <======== Number of best fitting models used to generate ensemble model =======>
 % <==============================================================================>
@@ -116,7 +118,7 @@ for run_id=-1
     end
     
     
-    load (strcat('./output/ABC-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-0-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'.mat'))
+    load (strcat('./output/ABC-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'.mat'))
     
     % remove repeated rows
     [RMSES,index1]=unique(RMSES,'rows','stable');
@@ -365,5 +367,3 @@ for j=1:cols
 
 end
 
-
-%save(strcat('./output/AICc_bests-modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-0-smoothing-',num2str(smoothfactor1),'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-dateini-',datestr(datenum(caddatex),'mm-dd-yy'),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-topmodels-',num2str(topmodels1(end)),'.mat'),'AICc_bests','-mat')

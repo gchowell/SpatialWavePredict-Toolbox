@@ -2,7 +2,7 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function plotFit_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
+function AICc_bests=plotFit_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
 % Plot model fits and derive performance metrics during the calibration period for the best fitting models
 
@@ -98,6 +98,7 @@ npatchess2=npatches_fixed;  % maximum number of subepidemics considered in epide
 
 flagss2=flag1_INP; % Growth model considered in epidemic trajectory
 
+typedecline2=typedecline2_INP; % 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
 
 % <==============================================================================>
 % <======== Number of best fitting models used to generate ensemble model ========================>
@@ -156,7 +157,7 @@ for rank1=topmodels1
     % <================================ Load model results ====================================>
     % <========================================================================================>
 
-    load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'))
+    load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'))
 
     rank1
 
@@ -301,8 +302,8 @@ for rank1=topmodels1
     % <=========================================================================================>
 
     subplot(2,4,5)
-    %plot(timevect,curves,'c-')
-    %hold on
+    plot(timevect,curves,'c-')
+    hold on
 
     LB1=quantile(curves',0.025);
     LB1=(LB1>=0).*LB1;
@@ -310,13 +311,13 @@ for rank1=topmodels1
     UB1=quantile(curves',0.975);
     UB1=(UB1>=0).*UB1;
 
-    h=area(timevect',[LB1' UB1'-LB1'])
-    hold on
+    %h=area(timevect',[LB1' UB1'-LB1'])
+    %hold on
 
     h(1).FaceColor = [1 1 1];
-    h(2).FaceColor = [0.8 0.8 0.8];
+    h(2).FaceColor = [0 1 1]; %cyan   [0.8 0.8 0.8] --> light gray
 
-    line1=plot(timevect,median(curves,2),'k--') 
+    line1=plot(timevect,median(curves,2),'r--') 
 
     set(line1,'LineWidth',2)
 
@@ -328,6 +329,9 @@ for rank1=topmodels1
 
     line1=plot(timevect,data1(:,2),'ko')
     set(line1,'LineWidth',2)
+
+    axis([0 length(timevect)-1 0 max(UB1)*1.2])
+
 
     ylabel(strcat(caddisease,{' '},datatype))
 
@@ -567,7 +571,7 @@ end
 
 figure(300)
 subplot(2,2,1)
-line1=plot(MAECSS(:,1),MAECSS(:,4),'-o')
+line1=plot(MAECSS(:,1),MAECSS(:,4),'k-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('MAE')
@@ -576,7 +580,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(2,2,2)
-line1=plot(MSECSS(:,1),MSECSS(:,4),'-o')
+line1=plot(MSECSS(:,1),MSECSS(:,4),'k-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('MSE')
@@ -585,7 +589,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(2,2,3)
-line1=plot(PICSS(:,1),PICSS(:,4),'-o')
+line1=plot(PICSS(:,1),PICSS(:,4),'k-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('Coverage of the 95% PI')
@@ -594,7 +598,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(2,2,4)
-line1=plot(WISCSS(:,1),WISCSS(:,4),'-o')
+line1=plot(WISCSS(:,1),WISCSS(:,4),'k-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('WIS')
@@ -610,7 +614,7 @@ performance=[topmodels1' MAECSS(:,4) MSECSS(:,4) PICSS(:,4) WISCSS(:,4)];
 
 T = array2table(performance);
 T.Properties.VariableNames(1:5) = {'i_th-ranked model','MAE','MSE','Coverage 95%PI','WIS'};
-writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num2str(onset_fixed),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <============================================================================>
 % <=================plot model parmeters for the top-ranked models =========================>
@@ -661,7 +665,7 @@ performance=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2
 
 T = array2table(performance);
 T.Properties.VariableNames(1:13) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB'};
-writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <========================================================================================>
 % <============ Plot estimated number of sub-epidemics and total epidemic size across top-ranked models============>

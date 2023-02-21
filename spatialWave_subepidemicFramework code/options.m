@@ -64,12 +64,12 @@ datevecend1=[2021 05 31]; % date of the most recent data file in format [year_nu
 % <============================Adjustments to data =================================>
 % <============================================================================>
 
-smoothfactor1=1; % <smoothfactor1>-day rolling average smoothing of the case series  (smoothfactor1=1 indicates no smoothing)
+smoothfactor1=1; % The span of the moving average smoothing of the case series (smoothfactor1=1 indicates no smoothing)
 
 calibrationperiod1=90; % calibrates model using the most recent <calibrationperiod1> data points where <calibrationperiod> does not exceed the length of the time series data otherwise it will use the maximum length of the data
 
 % <=============================================================================>
-% <=========================== Statistical method ====================================>
+% <=========================== Parameter estimation and bootstrapping=====================>
 % <=============================================================================>
 
 method1=0; % Type of estimation method. See below:
@@ -93,15 +93,15 @@ dist1=0; % Define dist1 which is the type of error structure. See below:
 
 numstartpoints=10; % Number of initial guesses for optimization procedure using MultiStart
 
-topmodelsx=4; % number of best fitting models (based on AICc) that will be generated to derive ensemble models
-
 M=300; % number of bootstrap realizations to characterize parameter uncertainty
 
 % <==============================================================================>
-% <========================= Mathematical model =====================================>
+% <========================= Spatial wave sub-epidemic model ============================>
 % <==============================================================================>
 
 npatches_fixed=4; % maximum number of subepidemics considered in epidemic wave model fit
+
+topmodelsx=4; % number of best fitting models (based on AICc) that will be generated to derive ensemble models
 
 if npatches_fixed==1  % if one sub-epidemic is employed, then there is only one model
     topmodelsx=1;
