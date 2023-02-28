@@ -57,7 +57,7 @@ AICc_best=RMSES(index1,4);
 
 P0=PS(index1,:);
 
-numparams=get_nparams(method1,npatches,flag1,1);
+numparams=get_nparams(method1,npatches,flag1,1,onset_fixed);
 
 close all
 

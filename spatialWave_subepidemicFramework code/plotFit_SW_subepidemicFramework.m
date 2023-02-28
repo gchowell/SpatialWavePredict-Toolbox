@@ -565,9 +565,9 @@ for rank1=topmodels1
 
 end
 
-% <============================================================================>
+% <===============================================================================================>
 % <=================plot calibration performance metrics for the top-ranked models ===============>
-% <============================================================================>
+% <===============================================================================================>
 
 figure(300)
 subplot(2,2,1)
@@ -621,7 +621,7 @@ writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num
 % <============================================================================>
 
 figure(400)
-subplot(2,2,1)
+subplot(3,2,1)
 line1=plot(param_rs(:,1),param_rs(:,2:end),'-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
@@ -630,7 +630,7 @@ ylabel('r')
 set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
-subplot(2,2,2)
+subplot(3,2,2)
 line1=plot(param_ps(:,1),param_ps(:,2:end),'-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
@@ -639,7 +639,7 @@ ylabel('p')
 set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
-subplot(2,2,3)
+subplot(3,2,3)
 line1=plot(param_as(:,1),param_as(:,2:end),'-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
@@ -648,7 +648,7 @@ ylabel('a')
 set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
-subplot(2,2,4)
+subplot(3,2,4)
 line1=plot(param_K0s(:,1),param_K0s(:,2:end),'-o')
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
@@ -657,14 +657,24 @@ ylabel('K_0')
 set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
+subplot(3,2,5)
+line1=plot(param_qs(:,1),param_qs(:,2:end),'-o')
+set(line1,'linewidth',2)
+xlabel('i_{th}Ranked Model')
+ylabel('q')
+
+set(gca,'FontSize', 16);
+set(gcf,'color','white')
+
+
 % <=============================================================================================>
 % <================= Save file with top-ranked models' parameter estimates =====================================>
 % <=============================================================================================>
 
-performance=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end)];
+performance=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end)];
 
 T = array2table(performance);
-T.Properties.VariableNames(1:13) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB'};
+T.Properties.VariableNames(1:16) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB'};
 writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <========================================================================================>
