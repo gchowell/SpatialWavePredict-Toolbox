@@ -17,6 +17,6 @@ printscreen1=1;  % flag or indicator variable (1/0) to indicate whether we want 
 % <====================== weighting scheme for ensemble model ============================>
 % <==============================================================================>
 
-weight_type1=1; % -1= equally weighted ensemble from the top models, 0=ensemble weighted based on AICc, 1= ensemble weighted based on relative likelihood (Akaike weights), 
+weight_type1=-1; % -1= equally weighted ensemble from the top models, 0=ensemble weighted based on AICc, 1= ensemble weighted based on relative likelihood (Akaike weights), 
 % 2= ensemble weighted based on WISC during calibration, 3 = ensemble weighted based on WISF during forecasting performance at previous time period (week)
 

@@ -2,7 +2,7 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function [outbreakx, caddate1, cadregion, caddisease,datatype, DT, datevecfirst1, datevecend1, numstartpoints,topmodelsx, M,flag1,typedecline2]=options
+function [cumulative1, outbreakx, caddate1, cadregion, caddisease,datatype, DT, datevecfirst1, datevecend1, numstartpoints,topmodelsx, M,flag1,typedecline2]=options
 
 % parameter values for the Spatial wave sub-epidemic framework.
 
@@ -37,6 +37,7 @@ global calibrationperiod1
 % <cadtemporal>-<caddisease>-<datatype>-<cadregion>-<caddate1>.txt');
 %  For example: 'daily-coronavirus-deaths-USA-05-11-2020.txt'
 
+cumulative1=1; % flag to indicate if the data file contains cumulative incidence counts (cumulative1=1) or not (cumulative1=0)
 
 outbreakx=52;  % identifier for the spatial area of interest
 

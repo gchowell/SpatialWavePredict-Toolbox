@@ -25,7 +25,7 @@ global calibrationperiod1
 % <=================== Load parameter values supplied by user =================>
 % <============================================================================>
 
-[outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
+[cumulative1_INP,outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
 
 
 % <=================================================================================>
@@ -58,14 +58,20 @@ datatype=datatype_INP; % string indicating the nature of the data (cases, deaths
 
 DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data).
 
+cumulative1=cumulative1_INP;
+
 if DT==1
     cadtemporal='daily';
 elseif DT==7
     cadtemporal='weekly';
 end
 
-% Name of the file containing the cumulative time series data (rows=time, cols=regions)
-datafilename1=strcat('cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',caddate1,'.txt'); %data file with all time series across areas/regions
+if cumulative1==1
+    % Name of the file containing the cumulative time series data (rows=time, cols=regions)
+    datafilename1=strcat('cumulative-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',caddate1,'.txt'); %data file with all time series across areas/regions
+else
+    datafilename1=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-',caddate1,'.txt'); %data file with all time series across areas/regions
+end
 
 % Name of the file for the adjusted incidence data file for a specific region and
 % after removing early zeros.
