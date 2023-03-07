@@ -2,7 +2,7 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function plotRankings_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
+function [AICcs,RelLik]=plotRankings_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
 % Plot model fits for the best fitting models
 
@@ -126,7 +126,10 @@ for run_id=-1
     
     AICc_bests=[AICc_bests full(RMSES(topmodels1,4))];
     
-    
+    AICcs=RMSES(topmodels1,4);
+    RelLik=relativelik_i(topmodels1);
+
+
     if 1  %plot relative likelihoods of the models
         
         figure(99)

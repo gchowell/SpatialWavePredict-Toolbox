@@ -3,7 +3,7 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,factor1,d]=fittingModifiedLogisticFunction(RMSES,PS,data1,DT,epidemic_period,M,flagX,numstartpoints,rank1)
+function [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d]=fittingModifiedLogisticFunction(RMSES,relativelik_i,PS,data1,DT,epidemic_period,M,flagX,numstartpoints,rank1)
 
 
 global flag1 timevect ydata yfit
@@ -54,6 +54,7 @@ onset_thr=RMSES(index1,2);
 typedecline1=RMSES(index1,3);
 
 AICc_best=RMSES(index1,4);
+RelLik_best=relativelik_i(index1);
 
 P0=PS(index1,:);
 

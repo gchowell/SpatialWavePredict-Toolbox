@@ -118,5 +118,5 @@ flag1=1; % Type of growth model used to model a subepidemic
 
 onset_fixed=0; % flag to indicate if the onset timing of subepidemics fixed at time 0 (onset_fixed=1) or not (onset_fixed=0).
 
-typedecline2=[1 2]; % Type of functional declines that will be considered for the sequential sub-epidemic sizes where 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
+typedecline2=[2]; % Type of functional declines that will be considered for the sequential sub-epidemic sizes where 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
 

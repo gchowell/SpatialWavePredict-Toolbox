@@ -365,6 +365,10 @@ onset_thr=RMSES(index1,2);
 
 typedecline1=RMSES(index1,3);
 
+AICmin=RMSES(index1,4);
+
+relativelik_i=exp((AICmin-RMSES(:,4))/2);
+
 AICc_best=RMSES(index1,4);
 
 %-->If we have a series of AICc  (or wSSE) values from N different models sorted from lowest (best model)
