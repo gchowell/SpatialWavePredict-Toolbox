@@ -370,3 +370,15 @@ for j=1:cols
 
 end
 
+
+% <=====================================================================================================>
+% <============================== Save file with top-ranked models' AICc metrics =======================>
+% <=====================================================================================================>
+
+performanceTop=[topmodels1' RMSES(topmodels1,4) relativelik_i(topmodels1)];
+
+T = array2table(performanceTop);
+T.Properties.VariableNames(1:3) = {'i_th-ranked model','AICc','RelativeLikelihood'};
+writetable(T,strcat('./output/AICc-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
+

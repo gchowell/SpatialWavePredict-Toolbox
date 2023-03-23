@@ -58,7 +58,7 @@ RelLik_best=relativelik_i(index1);
 
 P0=PS(index1,:);
 
-numparams=get_nparams(method1,npatches,flag1,1,onset_fixed);
+numparams=get_nparams(method1,dist1,npatches,flag1,1,onset_fixed);
 
 close all
 

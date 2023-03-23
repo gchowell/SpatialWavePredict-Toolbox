@@ -1,4 +1,4 @@
-function numparams=get_nparams(method1,npatches,flag1,fixI0,onset_fixed)
+function numparams=get_nparams(method1,dist1,npatches,flag1,fixI0,onset_fixed)
 
 %flag 0=GGM 1=GLM 2=GRM 3=Logistic 4=RIC 5=Gompertz
 
@@ -43,8 +43,8 @@ if fixI0==0 %fix initial datum or estimated
 end
 
 
-if method1==0
-    
+if method1==0 & dist1==0 % Normal distribution -- one parameter for variance
+
     numparams=numparams+1;
     
 elseif method1==3 | method1==4 %Neg. Binomial requires one more parameter (alpha)

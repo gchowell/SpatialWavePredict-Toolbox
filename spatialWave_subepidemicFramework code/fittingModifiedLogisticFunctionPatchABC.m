@@ -324,8 +324,7 @@ for npatches2=[npatchess]
 
             %
 
-
-            AICc=getAICc(method1,npatches,flag1(1),1,fval,length(ydata));
+            AICc=getAICc(method1,dist1,npatches,flag1(1),1,fval,length(ydata),onset_fixed);
 
             RMSES(count1,:)=[npatches onset_thr typedecline1 AICc];
 
@@ -337,7 +336,6 @@ for npatches2=[npatchess]
 
     end
 end
-
 
 % <=============================================================================================>
 % <======================== Sort the results by AICc (lowest to highest) =======================>

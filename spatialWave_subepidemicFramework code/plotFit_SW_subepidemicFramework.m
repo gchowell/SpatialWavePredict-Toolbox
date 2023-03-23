@@ -548,10 +548,10 @@ for rank1=topmodels1
     line1=plot(line3(:,1),line3(:,2),'r--')
     set(line1,'LineWidth',2)
 
-    lineEpiSize=[sum(data(:,2)) 0;sum(data(:,2)) 250];
+    %lineEpiSize=[sum(data(:,2)) 0;sum(data(:,2)) 250];
 
-    line1=plot(lineEpiSize(:,1),lineEpiSize(:,2),'r-+')
-    set(line1,'LineWidth',2)
+    %line1=plot(lineEpiSize(:,1),lineEpiSize(:,2),'r-+')
+    %set(line1,'LineWidth',2)
 
     cad1=strcat('Epidemic wave size=',num2str(param2(end,1),2),'(95%CI:',num2str(param2(end,2),2),',',num2str(param2(end,3),2),')');
 
