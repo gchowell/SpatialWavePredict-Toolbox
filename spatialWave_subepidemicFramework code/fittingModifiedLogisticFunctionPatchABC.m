@@ -233,17 +233,9 @@ for npatches2=[npatchess]
 
     for onset_thr=onset_thrs
 
-
-
         %options=[];
 
         for j=1:length(typedecline2)
-
-            if typedecline2(j)==2 & (flag1==0 | npatches<3)
-
-                continue
-            end
-
 
             typedecline1=typedecline2(j);
 
@@ -347,7 +339,6 @@ PS=PS(1:count1-1,:);
 
 RMSES=full(RMSES);
 PS=full(PS);
-
 
 [RMSES,index1]=sortrows(RMSES,[4 1]);
 
