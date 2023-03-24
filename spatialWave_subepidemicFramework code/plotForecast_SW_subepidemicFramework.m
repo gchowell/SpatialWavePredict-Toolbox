@@ -343,13 +343,17 @@ for run_id=-1
                 hold on
             end
 
+            if length(totinc)==1
+                continue
+            end
 
+            totinc=real(totinc);
+            
             curvesforecasts1=[curvesforecasts1 totinc];
 
             forecasts2=AddPoissonError(cumsum(totinc),20,dist1,factor1,d_hat);
 
             curvesforecasts2=[curvesforecasts2 forecasts2];
-
 
         end
 
