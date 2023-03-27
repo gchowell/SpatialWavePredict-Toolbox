@@ -28,7 +28,7 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 [cumulative1_INP, outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP, datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP, topmodelsx_INP, M_INP, flag1_INP,typedecline2_INP]=options
 
 % options_forecast.m
-[getperformance_INP, deletetempfiles_INP, forecastingperiod_INP, printscreen1_INP, weight_type1_INP]=options_forecast
+[getperformance_INP, deletetempfiles_INP, forecastingperiod_INP, weight_type1_INP]=options_forecast
 
 % <============================================================================>
 % <================================ Dataset ======================================>
@@ -144,7 +144,7 @@ else
     forecastingperiod=forecastingperiod_INP; %forecast horizon (number of data points ahead)
 end
 
-printscreen1=printscreen1_INP; % print plots with the results
+printscreen1=1; % print plots with the results
 
 % <==============================================================================>
 % <====================== weighting scheme for ensemble model ============================>
@@ -313,11 +313,24 @@ for run_id=-1
 
             [~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect2,IC,[],r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
 
+            if length(x(:,1))~=length(timevect2)
+              
+                continue
 
-            %subplot(1,2,2)
+            end
+
+            x=real(x);
+
+            y=sum(x,2);
+
+            totinc=[y(1,1);diff(y(:,1))];
+
+            totinc(1)=totinc(1)-(npatches-1);
+
+            bestfit=totinc;
 
             for j=1:npatches
-
+               
                 incidence1=[x(1,j);diff(x(:,j))];
 
                 if printscreen1
@@ -328,14 +341,6 @@ for run_id=-1
 
             end
 
-            y=sum(x,2);
-
-            totinc=[y(1,1);diff(y(:,1))];
-
-            totinc(1)=totinc(1)-(npatches-1);
-
-            bestfit=totinc;
-
             gray1=gray(10);
 
             if printscreen1
@@ -343,12 +348,6 @@ for run_id=-1
                 hold on
             end
 
-            if length(totinc)==1
-                continue
-            end
-
-            totinc=real(totinc);
-            
             curvesforecasts1=[curvesforecasts1 totinc];
 
             forecasts2=AddPoissonError(cumsum(totinc),20,dist1,factor1,d_hat);

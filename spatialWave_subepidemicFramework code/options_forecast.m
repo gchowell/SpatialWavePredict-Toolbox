@@ -1,5 +1,5 @@
  
-function [getperformance, deletetempfiles, forecastingperiod, printscreen1, weight_type1]=options_forecast
+function [getperformance, deletetempfiles, forecastingperiod, weight_type1]=options_forecast
 
 % <==============================================================================>
 % <========================== Forecasting parameters ===================================>
@@ -7,11 +7,9 @@ function [getperformance, deletetempfiles, forecastingperiod, printscreen1, weig
 
 getperformance=1; % flag or indicator variable (1/0) to indicate whether we want to compute the forecasting performance metrics
 
-deletetempfiles=1; % flag or indicator variable (1/0) to indicate whether we want to delete Forecast..mat files from the output folder after use
+deletetempfiles=0; % flag or indicator variable (1/0) to indicate whether we want to delete Forecast..mat files from the output folder after use
 
 forecastingperiod=30; % forecast horizon (number of time units ahead)
-
-printscreen1=1;  % flag or indicator variable (1/0) to indicate whether we want to print plots with the results
 
 % <==============================================================================>
 % <====================== weighting scheme for ensemble model ============================>
