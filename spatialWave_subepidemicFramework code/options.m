@@ -2,7 +2,7 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function [cumulative1, outbreakx, caddate1, cadregion, caddisease,datatype, DT, datevecfirst1, datevecend1, numstartpoints,topmodelsx, M,flag1,typedecline2]=options
+function [cumulative1, outbreakx, caddate1, cadregion, caddisease,datatype, DT, datevecfirst1, datevecend1, numstartpoints,topmodelsx, B,flag1,typedecline2]=options
 
 % parameter values for the Spatial wave sub-epidemic framework.
 
@@ -65,7 +65,7 @@ datevecend1=[2021 05 31]; % date of the most recent data file in format [year_nu
 % <============================Adjustments to data =================================>
 % <============================================================================>
 
-smoothfactor1=1; % The span of the moving average smoothing of the case series (smoothfactor1=1 indicates no smoothing)
+smoothfactor1=7; % The span of the moving average smoothing of the case series (smoothfactor1=1 indicates no smoothing)
 
 calibrationperiod1=90; % calibrates model using the most recent <calibrationperiod1> data points where <calibrationperiod> does not exceed the length of the time series data otherwise it will use the maximum length of the data
 
@@ -94,13 +94,13 @@ dist1=0; % Define dist1 which is the type of error structure. See below:
 
 numstartpoints=10; % Number of initial guesses for optimization procedure using MultiStart
 
-M=300; % number of bootstrap realizations to characterize parameter uncertainty
+B=300; % number of bootstrap realizations to characterize parameter uncertainty
 
 % <==============================================================================>
 % <========================= Spatial wave sub-epidemic model ============================>
 % <==============================================================================>
 
-npatches_fixed=4; % maximum number of subepidemics considered in epidemic wave model fit
+npatches_fixed=3; % maximum number of subepidemics considered in epidemic wave model fit
 
 topmodelsx=4; % number of best fitting models (based on AICc) that will be generated to derive ensemble models
 
