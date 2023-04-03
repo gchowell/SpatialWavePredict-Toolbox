@@ -14,7 +14,6 @@ global method1 %LSQ=0, MLE Poisson=1, Pearson chi-squared=2, MLE (Neg Binomial)=
 global npatches_fixed
 global onset_fixed
 global dist1
-global factor1
 global smoothfactor1
 global calibrationperiod1
 

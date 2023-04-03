@@ -61,6 +61,8 @@ datevecfirst1=datevecfirst1_INP;
 
 datevecend1=datevecend1_INP;
 
+cumulative1=cumulative1_INP;
+
 DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data).
 
 if DT==1
@@ -547,9 +549,9 @@ for run_id=-1
         datenum1=datenum1+DT;
 
 
-        if getperformance & forecastingperiod>0
+        if getperformance && forecastingperiod>0
 
-            data2=getData(cadtemporal,caddisease,datatype,cadregion,DT,datevecfirst1,datevecend1,datevec(datenum1),outbreak1,forecastingperiod);
+            data2=getData(cumulative1,cadtemporal,caddisease,datatype,cadregion,DT,datevecfirst1,datevecend1,datevec(datenum1),outbreak1,forecastingperiod);
 
             timevect2=(data1(end,1)+1:(data1(end,1)+1+forecastingperiod-1));
 
@@ -644,9 +646,9 @@ for run_id=-1
             %[RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1]=getensemblesubepidemics(cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,smoothfactor1,outbreakx,caddate1,flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,printscreen1);
 
             if run_id==0
-                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype,flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISC_hash,printscreen1);
+                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cumulative1,cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype,flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISC_hash,printscreen1);
             else
-                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype, flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISF_hash(:,run_id),printscreen1);
+                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cumulative1,cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype, flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISF_hash(:,run_id),printscreen1);
             end
 
             quantilescs=[quantilescs;quantilesc];

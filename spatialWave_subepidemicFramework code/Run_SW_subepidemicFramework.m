@@ -296,7 +296,6 @@ for outbreak1=outbreakx
 
     [RMSESx,PS,npatches,onset_thr,typedecline1,~]=fittingModifiedLogisticFunctionPatchABC(datafilename2,data1,DT,t_window,M,flag1,typedecline2,numstartpoints);
 
-    
     AICmin=RMSESx(1,4);
 
     relativelik_i=exp((AICmin-RMSESx(:,4))/2);
