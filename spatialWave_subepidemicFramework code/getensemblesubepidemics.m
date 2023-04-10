@@ -214,10 +214,10 @@ if getperformance
     % <=============================================================================================>
     % <============================== Save file with forecast ======================================>
     % <=============================================================================================>
-    forecastdata=[str2num(datestr((datenumIni:DT:datenumEnd)','mm')) str2num(datestr((datenumIni:DT:datenumEnd)','dd')) [data1(:,2);data2] median(curvesforecasts2,2) LB1' UB1'];
+    forecastdata=[str2num(datestr((datenumIni:DT:datenumEnd)','yyyy')) str2num(datestr((datenumIni:DT:datenumEnd)','mm')) str2num(datestr((datenumIni:DT:datenumEnd)','dd')) [data1(:,2);data2] median(curvesforecasts2,2) LB1' UB1'];
 
     T = array2table(forecastdata);
-    T.Properties.VariableNames(1:6) = {'month','day','data','median','LB','UB'};
+    T.Properties.VariableNames(1:7) = {'year','month','day','data','median','LB','UB'};
 
     writetable(T,strcat('./output/Ensemble(',num2str(topmodels1(end)),')-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 

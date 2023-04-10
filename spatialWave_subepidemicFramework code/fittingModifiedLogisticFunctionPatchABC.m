@@ -206,25 +206,27 @@ for npatches2=[npatchess]
     switch flag1
 
         case 0 %GGM
-            LB=[0  0 1  1 0 LBe]; % lower bound for r p a K q
+            LB=[0.0001  0 1  1 0 LBe]; % lower bound for r p a K q
             UB=[1000  1 1 1 0 UBe]; % % upper bound for r p a K q
 
         case 1 %GLM
-            LB=[0  0 1 20 0 LBe]; % lower bound for r p a K q
+            LB=[0.0001  0 1 20 0 LBe]; % lower bound for r p a K q
             UB=[1000  1 1 100000000 5 UBe]; % % upper bound for r p a K q
+            
         case 2 %GRM
-            LB=[0  0 0 20 0 LBe]; % lower bound for r p a K q
+            LB=[0.0001  0 0 20 0 LBe]; % lower bound for r p a K q
             UB=[1000  1 10 100000000  5 UBe]; % % upper bound for r p a K q
+
         case 3 %Logistic
-            LB=[0  1 1 20 0 LBe]; % lower bound for r p a K q
+            LB=[0.0001  1 1 20 0 LBe]; % lower bound for r p a K q
             UB=[1000 1 1 100000000 5 UBe]; % % upper bound for r p a K q
 
         case 4 %Richards
-            LB=[0  1 0 20 0 LBe]; % lower bound for r p a K q
+            LB=[0.0001  1 0 20 0 LBe]; % lower bound for r p a K q
             UB=[1000  1 10 100000000 5 UBe]; % % upper bound for r p a K q
 
         case 5 %Gompertz
-            LB=[0  1 0 20 0 LBe]; % lower bound for r p a K q
+            LB=[0.0001  1 0 20 0 LBe]; % lower bound for r p a K q
             UB=[1000  1 10 100000000 5 UBe]; % % upper bound for r p a K q
 
     end

@@ -671,10 +671,20 @@ set(gcf,'color','white')
 % <================= Save file with top-ranked models' parameter estimates =====================================>
 % <=============================================================================================>
 
-performance=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end)];
+if method1==3 | method1==4  %save parameter alpha. VAR=mean+alpha*mean; VAR=mean+alpha*mean^2;
+    rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end) param_alphas(:,2:end)];
+    T = array2table(rollparams);
+    T.Properties.VariableNames(1:19) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB','alpha mean','alpha LB','alpha UB'};
+elseif method1==5
+    rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end) param_alphas(:,2:end) param_ds(:,2:end)];
+    T = array2table(rollparams);
+    T.Properties.VariableNames(1:22) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB','alpha mean','alpha LB','alpha UB','d mean','d LB','d UB'};
+else
+    rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end)];
+    T = array2table(rollparams);
+    T.Properties.VariableNames(1:16) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB'};
+end
 
-T = array2table(performance);
-T.Properties.VariableNames(1:16) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB'};
 writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <========================================================================================>
