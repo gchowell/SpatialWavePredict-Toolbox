@@ -2,7 +2,7 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function AICc_bests=plotFit_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
+function performance=plotFit_SW_subepidemicFramework(outbreakx_pass,caddate1_pass)
 
 % Plot model fits and derive performance metrics during the calibration period for the best fitting models
 
@@ -140,7 +140,8 @@ totepisizess=[];
 
 cc2=1;
 
-AICc_bests=[];
+AICc_rank1=[];
+relativelik_rank1=[];
 
 for rank1=topmodels1
 
@@ -160,10 +161,9 @@ for rank1=topmodels1
     load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'))
 
     rank1
+    AICc_rank1=[AICc_rank1;[rank1 AICc_best]];
+    relativelik_rank1=[relativelik_rank1;[rank1 relativelik_i(rank1)]];
 
-    npatches
-
-    AICc_bests=[AICc_bests;AICc_best];
 
     timevect=(data1(:,1));
 
@@ -317,7 +317,7 @@ for rank1=topmodels1
     h(1).FaceColor = [1 1 1];
     h(2).FaceColor = [0 1 1]; %cyan   [0.8 0.8 0.8] --> light gray
 
-    line1=plot(timevect,median(curves,2),'r--') 
+    line1=plot(timevect,median(curves,2),'r--')
 
     set(line1,'LineWidth',2)
 
@@ -501,8 +501,8 @@ for rank1=topmodels1
     'epidemic wave size'
     param2=[median(totepisize1(:,1)) quantile(totepisize1(:,1),0.025) quantile(totepisize1(:,1),0.975)];
 
-   numsubepidemicss=[numsubepidemicss;[rank1 param1]];
-   totepisizess=[totepisizess;[rank1 param2]];
+    numsubepidemicss=[numsubepidemicss;[rank1 param1]];
+    totepisizess=[totepisizess;[rank1 param2]];
 
 
 
@@ -610,10 +610,10 @@ set(gcf,'color','white')
 % <================= Save file with top-ranked models' performance metrics (calibration)============================>
 % <=============================================================================================>
 
-performance=[topmodels1' MAECSS(:,4) MSECSS(:,4) PICSS(:,4) WISCSS(:,4)];
+performance=[topmodels1' MAECSS(:,4) MSECSS(:,4) PICSS(:,4) WISCSS(:,4) AICc_rank1(:,2) relativelik_rank1(:,2)];
 
 T = array2table(performance);
-T.Properties.VariableNames(1:5) = {'i_th-ranked model','MAE','MSE','Coverage 95%PI','WIS'};
+T.Properties.VariableNames(1:7) = {'i_th-ranked model','MAE','MSE','Coverage 95%PI','WIS','AICc','RelativeLikelihood'};
 writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <============================================================================>

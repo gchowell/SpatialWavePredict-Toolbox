@@ -224,12 +224,12 @@ for run_id=-1
         AICc_rank1=[AICc_rank1;[rank1 AICc_best]];
         relativelik_rank1=[relativelik_rank1;[rank1 relativelik_i(rankx)]];
 
-%         if(relativelik_i(rankx))<0.05
-%             relativelik_i(rankx)
-%             strcat('drop model rank=',num2str(rankx))
-%             topmodels1=1:1:rank1-1;
-%             break
-%         end
+        %         if(relativelik_i(rankx))<0.05
+        %             relativelik_i(rankx)
+        %             strcat('drop model rank=',num2str(rankx))
+        %             topmodels1=1:1:rank1-1;
+        %             break
+        %         end
 
         if npatches>1
 
@@ -316,7 +316,7 @@ for run_id=-1
             [~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect2,IC,[],r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
 
             if length(x(:,1))~=length(timevect2)
-              
+
                 continue
 
             end
@@ -332,7 +332,7 @@ for run_id=-1
             bestfit=totinc;
 
             for j=1:npatches
-               
+
                 incidence1=[x(1,j);diff(x(:,j))];
 
                 if printscreen1
@@ -712,7 +712,6 @@ if getperformance
 
     index1=find(MAEFSS(:,1)>=100);
 
-
     index2=setdiff(1:length(MAEFSS(:,1)),index1);
 
     figure(400)
@@ -768,47 +767,49 @@ if getperformance
     % <=================plot forecasting performance metrics of the ensemble models ==============>
     % <============================================================================>
 
-    figure(401)
+    if isempty(index1)~=1
 
-    subplot(2,2,1)
-    line1=plot(1+(1:length(index1)),MAEFSS(index1,4),'k-o')
-    set(line1,'linewidth',2)
-    xlabel('Ensemble(i) model')
-    ylabel('MAE')
+        figure(401)
 
-    set(gca,'FontSize', 16);
-    set(gcf,'color','white')
+        subplot(2,2,1)
+        line1=plot(1+(1:length(index1)),MAEFSS(index1,4),'k-o')
+        set(line1,'linewidth',2)
+        xlabel('Ensemble(i) model')
+        ylabel('MAE')
 
-    subplot(2,2,2)
-    line1=plot(1+(1:length(index1)),MSEFSS(index1,4),'k-o')
-    set(line1,'linewidth',2)
-    xlabel('Ensemble(i) model')
-    ylabel('MSE')
+        set(gca,'FontSize', 16);
+        set(gcf,'color','white')
 
-    set(gca,'FontSize', 16);
-    set(gcf,'color','white')
+        subplot(2,2,2)
+        line1=plot(1+(1:length(index1)),MSEFSS(index1,4),'k-o')
+        set(line1,'linewidth',2)
+        xlabel('Ensemble(i) model')
+        ylabel('MSE')
 
-    subplot(2,2,3)
-    line1=plot(1+(1:length(index1)),PIFSS(index1,4),'k-o')
-    set(line1,'linewidth',2)
-    xlabel('Ensemble(i) model')
-    ylabel('Coverage of the 95% PI')
+        set(gca,'FontSize', 16);
+        set(gcf,'color','white')
 
-    set(gca,'FontSize', 16);
-    set(gcf,'color','white')
+        subplot(2,2,3)
+        line1=plot(1+(1:length(index1)),PIFSS(index1,4),'k-o')
+        set(line1,'linewidth',2)
+        xlabel('Ensemble(i) model')
+        ylabel('Coverage of the 95% PI')
 
-    subplot(2,2,4)
+        set(gca,'FontSize', 16);
+        set(gcf,'color','white')
 
-    line1=plot(1+(1:length(index1)),WISFSS(index1,4),'k-o')
-    set(line1,'linewidth',2)
-    xlabel('Ensemble(i) model')
-    ylabel('WIS')
+        subplot(2,2,4)
 
+        line1=plot(1+(1:length(index1)),WISFSS(index1,4),'k-o')
+        set(line1,'linewidth',2)
+        xlabel('Ensemble(i) model')
+        ylabel('WIS')
 
-    set(gca,'FontSize', 16);
-    set(gcf,'color','white')
+        set(gca,'FontSize', 16);
+        set(gcf,'color','white')
 
-    
+    end
+
     % <=============================================================================================>
     % <=========================== Save file with ensemble forecasting performance metrics =========================>
     % <=============================================================================================>
