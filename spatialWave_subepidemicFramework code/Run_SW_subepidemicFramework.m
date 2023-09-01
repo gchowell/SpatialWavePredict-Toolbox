@@ -154,6 +154,25 @@ flag1=flag1_INP; %type of growth model used to describe a subepidemic
 
 typedecline2=typedecline2_INP; % 1=exponential decline in subepidemic size; 2=power-law decline in subepidemic size
 
+
+
+% <===========================================================================================================>
+% <====== Check that the number of estimated parameters is smaller than the number of data points= ===========>
+% <===========================================================================================================>
+
+numparams=get_nparams(method1,dist1,npatches_fixed,flag1,1,onset_fixed);
+
+numparams
+calibrationperiod1
+
+if numparams>=calibrationperiod1
+
+    error("Number of estimated parameters should be smaller than the calibration period. Consider increasing the length of the calibration period.")
+
+end
+
+
+
 % <==============================================================================>
 % <============ Load data and proceed to parameter estimation ================================>
 % <==============================================================================>

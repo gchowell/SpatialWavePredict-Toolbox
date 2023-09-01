@@ -134,21 +134,3 @@ flag1=1; % This integer variable specifies the type of growth model used to mode
 onset_fixed=0; % This variable indicates if the onset timing of subepidemics is fixed at time 0 (onset_fixed=1) or not (onset_fixed=0).
 
 typedecline2=[2]; % This variable specifies the type of functional declines that will be considered for the sequential sub-epidemic sizes where typedecline2=1 for exponential decline in subepidemic size and typedecline2=2 for power-law decline in sub-epidemic size.
-
-
-% <===========================================================================================================>
-% <====== Check that the number of estimated parameters is smaller than the number of data points= ===========>
-% <===========================================================================================================>
-
-numparams=get_nparams(method1,dist1,npatches_fixed,flag1,1,onset_fixed);
-
-numparams
-calibrationperiod1
-
-if numparams>=calibrationperiod1
-
-    error("Number of estimated parameters should be smaller than the calibration period. Consider increasing the length of the calibration period.")
-
-end
-
-
