@@ -52,13 +52,16 @@ caddisease=caddisease_INP;
 
 datatype=datatype_INP;
 
-DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data).
+DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data, 365=yearly data).
 
 if DT==1
     cadtemporal='daily';
 elseif DT==7
     cadtemporal='weekly';
+elseif DT==365
+    cadtemporal='yearly';
 end
+
 
 cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1);
 

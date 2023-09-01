@@ -16,13 +16,28 @@ if cumulative1==1
     data1=[data1(1);diff(data1)];
 end
 
-datenum1=datenum(datevecfirst1):DT:datenum(date1);
+if DT==365
 
-index1=length(datenum1):1:length(datenum1)+forecastingperiod-1;
+    years1=datevecfirst1(1):1:date1(1);
 
-if index1(end)>length(data1)
-    error('Forecasting period is loo long and cannot be evaluated with the available data.')
+    if length(data1)<length(years1)+forecastingperiod
+        error('Forecasting period is loo long and cannot be evaluated with the available data.')
+    else
+        data2=data1(length(years1)+1:1:length(years1)+forecastingperiod);
+    end
+
+    %data2=data1(length(years1)+1:1:length(years1)+forecastingperiod);
+
 else
-    data2=data1(index1);
-end
 
+    datenum1=datenum(datevecfirst1):DT:datenum(date1);
+
+    index1=length(datenum1):1:length(datenum1)+forecastingperiod-1;
+
+    if index1(end)>length(data1)
+        error('Forecasting period is loo long and cannot be evaluated with the available data.')
+    else
+        data2=data1(index1);
+    end
+
+end

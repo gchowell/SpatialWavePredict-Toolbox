@@ -408,14 +408,25 @@ for run_id=-1
 
                 set(gca, 'XTick', 0:3:length(dates1(:,1))-1);
                 set(gca, 'XTickLabel', strcat('\fontsize{14}',dates1(1:3:end,:)));
-            else
+
+                xticklabel_rotate;
+
+            elseif DT==7
 
                 set(gca, 'XTick', 0:2:length(dates1(:,1))-1);
                 set(gca, 'XTickLabel', strcat('\fontsize{14}',dates1(1:2:end,:)));
 
+                xticklabel_rotate;
+
+            elseif DT==365
+
+                years1=wave(1)+timelags:wave(1)+timelags+length(dates1(:,1))-1;
+
+                set(gca,'XTick',0:1:length(years1)-1);
+                set(gca, 'XTickLabel', strcat('\fontsize{14}',num2str(years1')));
+
             end
 
-            xticklabel_rotate;
 
             line1=plot(line2(:,1),line2(:,2),'k--')
             set(line1,'LineWidth',2)
@@ -546,8 +557,11 @@ for run_id=-1
 
         datenum1=datenum([str2num(caddate1(7:10)) str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
 
-        datenum1=datenum1+DT;
+        if (DT~=365)
 
+            datenum1=datenum1+DT;
+
+        end
 
         if getperformance && forecastingperiod>0
 

@@ -54,13 +54,16 @@ caddisease='coronavirus'; % This is a string variable indicating the name of the
 
 datatype='cases'; % This is a string variable indicating the nature of the data (e.g., cases, deaths, hospitalizations).
 
-DT=1; % This variable indicates the temporal resolution in days (1=daily data, 7=weekly data).
+DT=1; % This variable indicates the temporal resolution in days (e.g., 1=daily data, 7=weekly data, 365=yearly data).
 
 if DT==1
-    cadtemporal='daily'; % string indicating the temporal resolution of the data
+    cadtemporal='daily';
 elseif DT==7
     cadtemporal='weekly';
+elseif DT==365
+    cadtemporal='yearly';
 end
+
 
 datevecfirst1=[2020 02 27]; % This variable contains the date corresponding to the first data point in time series data in format [year_number month_number day_number].
 

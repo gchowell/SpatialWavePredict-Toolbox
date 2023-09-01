@@ -56,7 +56,7 @@ caddisease=caddisease_INP; % string indicating the name of the disease
 
 datatype=datatype_INP; % string indicating the nature of the data (cases, deaths, hospitalizations, etc)
 
-DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data).
+DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data, 365= yearly data).
 
 cumulative1=cumulative1_INP;
 
@@ -64,7 +64,10 @@ if DT==1
     cadtemporal='daily';
 elseif DT==7
     cadtemporal='weekly';
+elseif DT==365
+    cadtemporal='yearly';
 end
+
 
 if cumulative1==1
     % Name of the file containing the cumulative time series data (rows=time, cols=regions)
