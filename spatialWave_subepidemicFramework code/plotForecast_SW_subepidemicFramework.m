@@ -69,9 +69,12 @@ if DT==1
     cadtemporal='daily';
 elseif DT==7
     cadtemporal='weekly';
+elseif DT==365
+    cadtemporal='yearly';
 end
 
-cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1);
+
+cadfilename2=strcat(cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-state-',num2str(outbreakx),'-',caddate1)
 
 
 % <============================================================================>
