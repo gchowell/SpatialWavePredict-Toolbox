@@ -215,8 +215,6 @@ if getperformance
 
     datenum1=datenum([str2num(caddate1(7:10)) str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
 
-    datenum1=datenum1+DT;
-
     data2=getData(cumulative1,cadtemporal,caddisease,datatype,cadregion,DT,datevecfirst1,datevecend1,datevec(datenum1),outbreakx,forecastingperiod)
 
     timevect2=(data1(end,1)+1:(data1(end,1)+1+forecastingperiod-1));
