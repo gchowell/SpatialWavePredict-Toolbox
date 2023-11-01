@@ -204,7 +204,7 @@ for npatches2=[npatchess]
     %[npatches onset_thr]
 
     rlb=mean(abs(data(1:2,1)))/200;
-    rub=mean(abs(data(1:2,1)))*2;
+    rub=max(abs(data(1:2,1)))*2;
 
     switch flag1
 
