@@ -118,7 +118,7 @@ z(6)=alpha;
 z(7)=d;
 
 rlb=mean(abs(data(1:2,1)))/200;
-rub=max(abs(data(1:2,1)))*2;
+rub=max(abs(data(1:2,1)))*5;
 
 switch flag1
     
