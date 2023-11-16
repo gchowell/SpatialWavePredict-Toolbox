@@ -54,6 +54,8 @@ datatype=datatype_INP;
 
 DT=DT_INP; % temporal resolution in days (1=daily data, 7=weekly data, 365=yearly data).
 
+M=M_INP;
+
 if DT==1
     cadtemporal='daily';
 elseif DT==7
@@ -130,6 +132,8 @@ WISFSS=[];
 quantilescs=[];
 quantilesfs=[];
 
+MCSES=[];
+
 param_rs=[];
 param_ps=[];
 param_as=[];
@@ -190,6 +194,8 @@ for rank1=topmodels1
 
     param_d=[mean(Phatss(:,7)) quantile(Phatss(:,7),0.025) quantile(Phatss(:,7),0.975)];
 
+    MCSE=[std(Phatss(:,1))/sqrt(M) std(Phatss(:,2))/sqrt(M) std(Phatss(:,3))/sqrt(M) std(Phatss(:,4))/sqrt(M) std(Phatss(:,5))/sqrt(M) std(Phatss(:,6))/sqrt(M) std(Phatss(:,7))/sqrt(M)];
+
     % store the parameters across top-ranked models
     param_rs=[param_rs;[rank1 param_r]];
     param_ps=[param_ps; [rank1 param_p]];
@@ -199,6 +205,7 @@ for rank1=topmodels1
     param_alphas=[param_alphas;[rank1 param_alpha]];
     param_ds=[param_ds;[rank1 param_d]];
 
+    MCSES=[MCSES;[rank1 MCSE]];
 
     cad1=strcat('r=',num2str(param_r(end,1),2),'(95%CI:',num2str(param_r(end,2),2),',',num2str(param_r(end,3),2),')');
     cad2=strcat('p=',num2str(param_p(end,1),2),'(95%CI:',num2str(param_p(end,2),2),',',num2str(param_p(end,3),2),')')
@@ -377,6 +384,7 @@ for rank1=topmodels1
 
     color1=['r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';];
 
+    fittedcurves=zeros(length(timevect),M);
 
     % generate forecast curves from each bootstrap realization
     for realization=1:M
@@ -451,6 +459,8 @@ for rank1=topmodels1
 
         bestfit=totinc;
 
+        fittedcurves(:,realization)=totinc;
+
         gray1=gray(10);
 
         plot(timevect,totinc,'color',gray1(7,:))
@@ -478,6 +488,61 @@ for rank1=topmodels1
 
     [quantilesc,quantilesf]=computeQuantiles(data1,curves,0);
     quantilescs=[quantilescs;quantilesc];
+
+
+       % compute doubling times
+
+    forecastingperiod=0;
+    
+    meandoublingtime=zeros(M,1);
+
+    doublingtimess=zeros(30,M)+NaN;
+
+    maxd=1;
+
+    for j=1:M
+
+        [tds,C0data,curve,doublingtimes]=getDoublingTimeCurve(max(fittedcurves(:,j),0),DT,0);
+
+        doublingtimess(1:length(doublingtimes),j)=doublingtimes;
+
+        if maxd<length(doublingtimes)
+            maxd=length(doublingtimes);
+        end
+
+        meandoublingtime=[meandoublingtime;mean(doublingtimes)];
+    end
+
+    doublingtimess=doublingtimess(1:maxd,1:M);
+
+    seq_doublingtimes=[];
+
+    for j=1:maxd
+
+        index1=find(~isnan(doublingtimess(j,:)));
+
+        seq_doublingtimes=[seq_doublingtimes;[j mean(doublingtimess(j,index1)) quantile(doublingtimess(j,index1),0.025) quantile(doublingtimess(j,index1),0.975) length(index1)./M]];
+
+    end
+
+    seq_doublingtimes % [ith doubling, mean, 95%CI LB, 95%CI UB, prob. i_th doubling]
+
+    % Mean doubling times
+    dmean=mean(meandoublingtime);
+    dLB=quantile(meandoublingtime,0.025);
+    dUB=quantile(meandoublingtime,0.975);
+
+    param_doubling=[dmean dLB dUB]
+
+    % <=============================================================================================>
+    % <============================== Save file with doubling time estimates =======================>
+    % <=============================================================================================>
+
+    T = array2table(seq_doublingtimes);
+    T.Properties.VariableNames(1:5) = {'i_th doubling','db mean','db 95%CI LB','db 95% CI UB','prob. i_th doubling'};
+    
+    writetable(T,strcat('./output/doublingTimes-ranked(', num2str(rank1),')-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
 
 
     % histogram of the predicted distribution of the number of subepidemics and epidemic
@@ -678,17 +743,34 @@ if method1==3 | method1==4  %save parameter alpha. VAR=mean+alpha*mean; VAR=mean
     rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end) param_alphas(:,2:end)];
     T = array2table(rollparams);
     T.Properties.VariableNames(1:19) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB','alpha mean','alpha LB','alpha UB'};
+
+    rollparams=[MCSES(:,1:7)];
+    T2 = array2table(rollparams);
+    T2.Properties.VariableNames(1:7) = {'i_th-ranked model','r MCSE','p MCSE','a MCSE','K0 MCSE','q MCSE','alpha MCSE'};
+
 elseif method1==5
     rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end) param_alphas(:,2:end) param_ds(:,2:end)];
     T = array2table(rollparams);
     T.Properties.VariableNames(1:22) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB','alpha mean','alpha LB','alpha UB','d mean','d LB','d UB'};
+
+    rollparams=[MCSES(:,1:8)];
+    T2 = array2table(rollparams);
+    T2.Properties.VariableNames(1:8) = {'i_th-ranked model','r MCSE','p MCSE','a MCSE','K0 MCSE','q MCSE','alpha MCSE','d MCSE'};
+
 else
     rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end)];
     T = array2table(rollparams);
     T.Properties.VariableNames(1:16) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB'};
+
+    rollparams=[MCSES(:,1:6)];
+    T2 = array2table(rollparams);
+    T2.Properties.VariableNames(1:6) = {'i_th-ranked model','r MCSE','p MCSE','a MCSE','K0 MCSE','q MCSE'};
+
 end
 
 writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
+writetable(T2,strcat('./output/MCSES-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <========================================================================================>
 % <============ Plot estimated number of sub-epidemics and total epidemic size across top-ranked models============>
