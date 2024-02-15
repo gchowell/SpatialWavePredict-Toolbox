@@ -1,4 +1,10 @@
-function [tds,C0data,curve,doublingtimes]=getOutbreakDoublingTime(curve,DT,print1)
+function [tds,C0data,curve2,doublingtimes]=getDoublingTimeCurve(curve,DT,print1)
+
+tds=[];
+C0data=[];
+curve2=[];
+doublingtimes=[];
+
 
 dt1=0.01;
 
@@ -113,4 +119,7 @@ cumcases=tds(end,2);
 
 meanDoublingTime=mean(doublingtimes);
 
+curve2=curve;
+
+return
 
