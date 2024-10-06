@@ -183,6 +183,10 @@ end
 %pause(10*rand)
 data=load(strcat('./input/',datafilename1)); % load time series dataset (rows=time, cols=regions/areas)
 
+if isempty(data)
+    error('The dataset is empty')
+end
+
 dataprov=data';
 
 timelags=0; % keeps track of the epidemic onset timing (nonzero case)

@@ -261,6 +261,11 @@ if method1==0 & dist1==0
     var1=sum((bestfit-data).^2)./(length(bestfit)-numparams); % last revised: 16 Oct 2022
     factor1=sqrt(var1);
 
+elseif method1==6 & dist1==6
+
+    var1=sum((bestfit-data).^2)./(length(bestfit)-numparams); % last revised: 04 Oct 2024
+    factor1=sqrt(var1)/sqrt(2);  % scale parameter: b= sigma/sqrt(2);
+
 end
 
 
