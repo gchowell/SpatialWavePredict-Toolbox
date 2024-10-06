@@ -222,6 +222,8 @@ doublingtimess=zeros(30,M1)+NaN;
 
 maxd=1;
 
+M1=length(curvesforecasts1(1,:));
+
 for j=1:M1
 
     [tds,C0data,curve,doublingtimes]=getDoublingTimeCurve(max(curvesforecasts1(:,j),0),DT,0);
