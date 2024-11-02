@@ -1,4 +1,4 @@
-# spatial_wave_subepidemic_framework
+# SpatialWavePredict Toolbox
  A Matlab toolbox for fitting and forecasting epidemic trajectories using the spatial wave sub-epidemic framework 
 
 <p> It carries out the following tasks: </p> 
