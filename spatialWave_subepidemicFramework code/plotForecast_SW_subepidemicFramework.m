@@ -441,7 +441,7 @@ for run_id=-1
 
             title(strcat(num2ordinal(rank1),' Ranked Model'))
 
-            line1=plot(data1(:,1),data1(:,2),'ko')
+            line1=plot(data1(:,1),data1(:,2),'ko');
             set(line1,'LineWidth',2)
 
 
@@ -451,7 +451,7 @@ for run_id=-1
             line2=[timevect(end) 0;timevect(end) max(data1(:,2))*2];
 
 
-            line1=plot(line2(:,1),line2(:,2),'k--')
+            line1=plot(line2(:,1),line2(:,2),'k--');
             set(line1,'LineWidth',2)
 
 
@@ -496,7 +496,7 @@ for run_id=-1
             end
 
 
-            line1=plot(line2(:,1),line2(:,2),'k--')
+            line1=plot(line2(:,1),line2(:,2),'k--');
             set(line1,'LineWidth',2)
 
             ylabel(strcat(caddisease,{' '},datatype))
@@ -541,15 +541,15 @@ for run_id=-1
 
             %line1=plot(timevect2,quantile(curvesforecasts2',0.5),'r-')
 
-            line1=plot(timevect2,median(curvesforecasts2,2),'r-')
+            line1=plot(timevect2,median(curvesforecasts2,2),'r-');
 
             set(line1,'LineWidth',2)
 
             if  1
-                line1=plot(timevect2,quantile(curvesforecasts2',0.025),'k--')
+                line1=plot(timevect2,quantile(curvesforecasts2',0.025),'k--');
                 set(line1,'LineWidth',2)
 
-                line1=plot(timevect2,quantile(curvesforecasts2',0.975),'k--')
+                line1=plot(timevect2,quantile(curvesforecasts2',0.975),'k--');
                 set(line1,'LineWidth',2)
             end
 
@@ -558,7 +558,7 @@ for run_id=-1
             gray1=gray(10);
 
             % plot time series datalatest
-            line1=plot(data1(:,1),data1(:,2),'ko')
+            line1=plot(data1(:,1),data1(:,2),'ko');
             set(line1,'LineWidth',2)
 
 
@@ -568,7 +568,7 @@ for run_id=-1
 
             box on
 
-            line1=plot(line2(:,1),line2(:,2),'k--')
+            line1=plot(line2(:,1),line2(:,2),'k--');
             set(line1,'LineWidth',2)
 
 
@@ -606,7 +606,7 @@ for run_id=-1
 
             end
 
-            line1=plot(line2(:,1),line2(:,2),'k--')
+            line1=plot(line2(:,1),line2(:,2),'k--');
             set(line1,'LineWidth',2)
 
             ylabel(strcat(caddisease,{' '},datatype))
@@ -809,7 +809,7 @@ if getperformance
     figure(400)
 
     subplot(2,2,1)
-    line1=plot(MAEFSS(index2,1),MAEFSS(index2,4),'k-o')
+    line1=plot(MAEFSS(index2,1),MAEFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
     xlabel('i_{th}Ranked Model')
     ylabel('MAE')
@@ -818,7 +818,7 @@ if getperformance
     set(gcf,'color','white')
 
     subplot(2,2,2)
-    line1=plot(MSEFSS(index2,1),MSEFSS(index2,4),'k-o')
+    line1=plot(MSEFSS(index2,1),MSEFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
     xlabel('i_{th}Ranked Model')
     ylabel('MSE')
@@ -827,7 +827,7 @@ if getperformance
     set(gcf,'color','white')
 
     subplot(2,2,3)
-    line1=plot(PIFSS(index2,1),PIFSS(index2,4),'k-o')
+    line1=plot(PIFSS(index2,1),PIFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
     xlabel('i_{th}Ranked Model')
     ylabel('Coverage of the 95% PI')
@@ -837,7 +837,7 @@ if getperformance
 
     subplot(2,2,4)
 
-    line1=plot(WISFSS(index2,1),WISFSS(index2,4),'k-o')
+    line1=plot(WISFSS(index2,1),WISFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
     xlabel('i_{th}Ranked Model')
     ylabel('WIS')
@@ -864,7 +864,7 @@ if getperformance
         figure(401)
 
         subplot(2,2,1)
-        line1=plot(1+(1:length(index1)),MAEFSS(index1,4),'k-o')
+        line1=plot(1+(1:length(index1)),MAEFSS(index1,4),'k-o');
         set(line1,'linewidth',2)
         xlabel('Ensemble(i) model')
         ylabel('MAE')
@@ -873,7 +873,7 @@ if getperformance
         set(gcf,'color','white')
 
         subplot(2,2,2)
-        line1=plot(1+(1:length(index1)),MSEFSS(index1,4),'k-o')
+        line1=plot(1+(1:length(index1)),MSEFSS(index1,4),'k-o');
         set(line1,'linewidth',2)
         xlabel('Ensemble(i) model')
         ylabel('MSE')
@@ -882,7 +882,7 @@ if getperformance
         set(gcf,'color','white')
 
         subplot(2,2,3)
-        line1=plot(1+(1:length(index1)),PIFSS(index1,4),'k-o')
+        line1=plot(1+(1:length(index1)),PIFSS(index1,4),'k-o');
         set(line1,'linewidth',2)
         xlabel('Ensemble(i) model')
         ylabel('Coverage of the 95% PI')
@@ -892,7 +892,7 @@ if getperformance
 
         subplot(2,2,4)
 
-        line1=plot(1+(1:length(index1)),WISFSS(index1,4),'k-o')
+        line1=plot(1+(1:length(index1)),WISFSS(index1,4),'k-o');
         set(line1,'linewidth',2)
         xlabel('Ensemble(i) model')
         ylabel('WIS')

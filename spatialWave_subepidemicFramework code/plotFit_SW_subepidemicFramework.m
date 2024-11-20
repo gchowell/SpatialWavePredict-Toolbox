@@ -231,7 +231,7 @@ for rank1=topmodels1
 
     line2=[param_r(1,2) 10;param_r(1,3) 10];
 
-    line1=plot(line2(:,1),line2(:,2),'r--')
+    line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
     axis([param_r(1,2)-0.05 param_r(1,3)+0.05 0 120])
@@ -248,7 +248,7 @@ for rank1=topmodels1
 
     line2=[param_p(1,2) 10;param_p(1,3) 10];
 
-    line1=plot(line2(:,1),line2(:,2),'r--')
+    line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
     axis([param_p(1,2)-0.025 param_p(1,3)+0.025 0 120])
@@ -265,7 +265,7 @@ for rank1=topmodels1
 
     line2=[param_K0(1,2) 10;param_K0(1,3) 10];
 
-    line1=plot(line2(:,1),line2(:,2),'r--')
+    line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
     axis([param_K0(1,2)-50 param_K0(1,3)+50 0 120])
@@ -281,7 +281,7 @@ for rank1=topmodels1
 
     line2=[param_q(1,2) 10;param_q(1,3) 10];
 
-    line1=plot(line2(:,1),line2(:,2),'r--')
+    line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
     axis([max(param_q(1,2)-0.1,0) param_q(1,3)+0.1 0 200])
@@ -327,17 +327,17 @@ for rank1=topmodels1
     h(1).FaceColor = [1 1 1];
     h(2).FaceColor = [0 1 1]; %cyan   [0.8 0.8 0.8] --> light gray
 
-    line1=plot(timevect,median(curves,2),'r--')
+    line1=plot(timevect,median(curves,2),'r--');
 
     set(line1,'LineWidth',2)
 
-    line1=plot(timevect,LB1,'r--')
+    line1=plot(timevect,LB1,'r--');
     set(line1,'LineWidth',2)
 
-    line1=plot(timevect,UB1,'r--')
+    line1=plot(timevect,UB1,'r--');
     set(line1,'LineWidth',2)
 
-    line1=plot(timevect,data1(:,2),'ko')
+    line1=plot(timevect,data1(:,2),'ko');
     set(line1,'LineWidth',2)
 
     axis([0 length(timevect)-1 0 max(UB1)*1.2])
@@ -472,7 +472,7 @@ for rank1=topmodels1
     xlabel('\fontsize{16}Time');
     ylabel(strcat(caddisease,{' '},datatype))
 
-    line1=plot(data(:,1),data(:,2),'ko')
+    line1=plot(data(:,1),data(:,2),'ko');
     set(line1,'LineWidth',2)
 
     axis([timevect(1) timevect(end)+1 0 max(data(:,2))*1.3])
@@ -490,7 +490,7 @@ for rank1=topmodels1
     quantilescs=[quantilescs;quantilesc];
 
 
-       % compute doubling times
+    % compute doubling times
 
     forecastingperiod=0;
     
@@ -583,12 +583,12 @@ for rank1=topmodels1
 
     line2=[param1(1,2) 20;param1(1,3) 20];
 
-    line1=plot(line2(:,1),line2(:,2),'r--')
+    line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
     line3=[param1(1,1) 0;param1(1,1) 250];
 
-    line1=plot(line3(:,1),line3(:,2),'r--')
+    line1=plot(line3(:,1),line3(:,2),'r--');
     set(line1,'LineWidth',2)
 
     xlabel('Number of sub-epidemics')
@@ -608,12 +608,12 @@ for rank1=topmodels1
 
     line2=[param2(1,2) 20;param2(1,3) 20];
 
-    line1=plot(line2(:,1),line2(:,2),'r--')
+    line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
     line3=[param2(1,1) 0;param2(1,1) 250];
 
-    line1=plot(line3(:,1),line3(:,2),'r--')
+    line1=plot(line3(:,1),line3(:,2),'r--');
     set(line1,'LineWidth',2)
 
     %lineEpiSize=[sum(data(:,2)) 0;sum(data(:,2)) 250];
@@ -639,7 +639,7 @@ end
 
 figure(300)
 subplot(2,2,1)
-line1=plot(MAECSS(:,1),MAECSS(:,4),'k-o')
+line1=plot(MAECSS(:,1),MAECSS(:,4),'k-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('MAE')
@@ -648,7 +648,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(2,2,2)
-line1=plot(MSECSS(:,1),MSECSS(:,4),'k-o')
+line1=plot(MSECSS(:,1),MSECSS(:,4),'k-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('MSE')
@@ -657,7 +657,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(2,2,3)
-line1=plot(PICSS(:,1),PICSS(:,4),'k-o')
+line1=plot(PICSS(:,1),PICSS(:,4),'k-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('Coverage of the 95% PI')
@@ -666,7 +666,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(2,2,4)
-line1=plot(WISCSS(:,1),WISCSS(:,4),'k-o')
+line1=plot(WISCSS(:,1),WISCSS(:,4),'k-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('WIS')
@@ -690,7 +690,7 @@ writetable(T,strcat('./output/performance-calibration-topRanked-onsetfixed-',num
 
 figure(400)
 subplot(3,2,1)
-line1=plot(param_rs(:,1),param_rs(:,2:end),'-o')
+line1=plot(param_rs(:,1),param_rs(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('r')
@@ -699,7 +699,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(3,2,2)
-line1=plot(param_ps(:,1),param_ps(:,2:end),'-o')
+line1=plot(param_ps(:,1),param_ps(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('p')
@@ -708,7 +708,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(3,2,3)
-line1=plot(param_as(:,1),param_as(:,2:end),'-o')
+line1=plot(param_as(:,1),param_as(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('a')
@@ -717,7 +717,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(3,2,4)
-line1=plot(param_K0s(:,1),param_K0s(:,2:end),'-o')
+line1=plot(param_K0s(:,1),param_K0s(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('K_0')
@@ -726,7 +726,7 @@ set(gca,'FontSize', 16);
 set(gcf,'color','white')
 
 subplot(3,2,5)
-line1=plot(param_qs(:,1),param_qs(:,2:end),'-o')
+line1=plot(param_qs(:,1),param_qs(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('q')
@@ -778,7 +778,7 @@ writetable(T2,strcat('./output/MCSES-topRanked-onsetfixed-',num2str(onset_fixed)
 
 figure(500)
 subplot(1,2,1)
-line1=plot(numsubepidemicss(:,1),numsubepidemicss(:,2:end),'-o')
+line1=plot(numsubepidemicss(:,1),numsubepidemicss(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('Number of sub-epidemics')
@@ -787,7 +787,7 @@ set(gca,'FontSize', 24);
 set(gcf,'color','white')
 
 subplot(1,2,2)
-line1=plot(totepisizess(:,1),totepisizess(:,2:end),'-o')
+line1=plot(totepisizess(:,1),totepisizess(:,2:end),'-o');
 set(line1,'linewidth',2)
 xlabel('i_{th}Ranked Model')
 ylabel('Total epidemic wave size')
