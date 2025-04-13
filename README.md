@@ -1,22 +1,25 @@
 # SpatialWavePredict Toolbox
 ## 📌 Overview
 
-**SpatialWavePredict Toolbox** is a MATLAB-based toolkit designed for fitting and forecasting epidemic trajectories using the **spatial wave sub-epidemic framework**. It offers functionalities such as:
+## Overview
 
-- Fitting models to time series data
-- Estimating parameters with quantified uncertainty
-- Plotting fits and AICc values of top-ranked models
-- Generating forecasts and ensemble forecasts based on top-ranked models
+**SpatialWavePredict Toolbox** is a **user-friendly MATLAB-based toolkit** designed for fitting and forecasting epidemic trajectories using the **ensemble spatial wave sub-epidemic framework**. This framework captures diverse wave dynamics by aggregating multiple asynchronous growth processes and has demonstrated superior performance in short-term forecasts of various infectious disease outbreaks, including SARS, Ebola, and early waves of the COVID-19 pandemic in the US.
 
-<p> Additional features include:</p>
+Key functionalities include:
 
-<ul>
-    <li>fitting models using different parameter estimation approaches (least-squares, maximum likelihood estimation),</li>
-    <li>fitting models using assuming different error structures (normal, Poisson, negagive binomial),</li>
-    <li>user can select the underlying function for the sub-epidemic building block (generalized-logistic model, Richards model, and the generalized Richards model (GRM),</li>
-    <li>user can select two different decline functions for sub-epidemic sizes: Exponential and Power-law.</li>
-    
-</ul>
+- **Fitting models to time series data using a five-parameter epidemic wave model that aggregates overlapping sub-epidemics.**
+- **Estimating parameters with quantified uncertainty through parametric bootstrapping.**
+- **Plotting fits and AICc values of top-ranked models.**
+- **Generating forecasts and ensemble forecasts based on top-ranked models.**
+- **Quantifying forecasting performance using metrics that evaluate point and distributional forecasts, including the weighted interval score.**
+
+Additional features:
+
+- **Support for different parameter estimation approaches (least-squares, maximum likelihood estimation).**
+- **Ability to assume different error structures (normal, Poisson, negative binomial).**
+- **Selection of underlying functions for the sub-epidemic building block (generalized-logistic model, Richards model, and the generalized Richards model).**
+- **Option to choose between two decline functions for sub-epidemic sizes: Exponential and Power-law.**
+
 
 ## 📺 Tutorial Resources
 
