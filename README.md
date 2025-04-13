@@ -2,8 +2,7 @@
  A Matlab toolbox for fitting and forecasting epidemic trajectories using the spatial wave sub-epidemic framework 
 
 <p> <a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-024-02241-2" target="_blank">SpatialWavePredict Tutorial</a></p> 
-<a href="https://www.youtube.com/watch?v=qxuF_tTzcR8" target="_blank">Video Tutorial</a>
-
+<p><a href="https://www.youtube.com/watch?v=qxuF_tTzcR8" target="_blank">Video Tutorial</a></p>
 
 <p> It carries out the following tasks: </p> 
 <ul>
