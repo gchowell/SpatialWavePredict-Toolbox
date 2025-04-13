@@ -4,6 +4,9 @@
 <p>SpatialWavePredict Tutorial: https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-024-02241-2</p>
 <p>Video Tutorial: https://www.youtube.com/watch?v=qxuF_tTzcR8</p>
 
+<a href="https://www.youtube.com/watch?v=qxuF_tTzcR8" target="_blank">Video Tutorial</a>
+
+
 <p> It carries out the following tasks: </p> 
 <ul>
     <li>fitting models to time series data,</li>
