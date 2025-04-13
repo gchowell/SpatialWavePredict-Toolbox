@@ -1,18 +1,12 @@
 # SpatialWavePredict Toolbox
- A Matlab toolbox for fitting and forecasting epidemic trajectories using the spatial wave sub-epidemic framework 
+## 📌 Overview
 
-<p> <a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-024-02241-2" target="_blank">SpatialWavePredict Tutorial</a></p> 
-<p><a href="https://www.youtube.com/watch?v=qxuF_tTzcR8" target="_blank">Video Tutorial</a></p>
+**SpatialWavePredict Toolbox** is a MATLAB-based toolkit designed for fitting and forecasting epidemic trajectories using the **spatial wave sub-epidemic framework**. It offers functionalities such as:
 
-<p> It carries out the following tasks: </p> 
-<ul>
-    <li>fitting models to time series data,</li>
-    <li>estimation of parameters with quantified uncertainty,</li>
-    <li>plotting the fits of the top-ranked models,</li>
-    <li>plotting the AICc values of the top-ranked models,</li>
-    <li>generates forecasts of the top-ranked models</li>
-    <li>gnerates ensemble forecasts based on the top-ranked models.</li>
-</ul>
+- Fitting models to time series data
+- Estimating parameters with quantified uncertainty
+- Plotting fits and AICc values of top-ranked models
+- Generating forecasts and ensemble forecasts based on top-ranked models
 
 <p> Additional features include:</p>
 
@@ -23,6 +17,14 @@
     <li>user can select two different decline functions for sub-epidemic sizes: Exponential and Power-law.</li>
     
 </ul>
+
+## 📺 Tutorial Resources
+
+- **Tutorial Paper:** [SpatialWavePredict: A tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework](https://doi.org/10.1016/j.idm.2024.02.001)
+- **Video Tutorial:** [YouTube Series on SpatialWavePredict Toolbox](https://www.youtube.com/playlist?list=PLxyz)
+
+---
+
     
 # Installation requirements
 
