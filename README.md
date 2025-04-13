@@ -20,8 +20,8 @@
 
 ## 📺 Tutorial Resources
 
-- **Tutorial Paper:** [SpatialWavePredict: A tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework](https://doi.org/10.1016/j.idm.2024.02.001)
-- **Video Tutorial:** [YouTube Series on SpatialWavePredict Toolbox](https://www.youtube.com/playlist?list=PLxyz)
+- **Tutorial Paper:** [SpatialWavePredict: A tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-024-02241-2)
+- **Video Tutorial:** [YouTube Series on SpatialWavePredict Toolbox](https://www.youtube.com/watch?v=qxuF_tTzcR8)
 
 ---
 
