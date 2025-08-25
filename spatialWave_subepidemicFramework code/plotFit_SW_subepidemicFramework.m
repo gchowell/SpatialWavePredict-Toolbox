@@ -739,7 +739,7 @@ set(gcf,'color','white')
 % <================= Save file with top-ranked models' parameter estimates =====================================>
 % <=============================================================================================>
 
-if method1==3 | method1==4  %save parameter alpha. VAR=mean+alpha*mean; VAR=mean+alpha*mean^2;
+if method1==3 || method1==4  %save parameter alpha. VAR=mean+alpha*mean; VAR=mean+alpha*mean^2;
     rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end) param_alphas(:,2:end)];
     T = array2table(rollparams);
     T.Properties.VariableNames(1:19) = {'i_th-ranked model','r mean','r LB','r UB','p mean','p LB','p UB','a mean','a LB','a UB','K0 mean','K0 LB','K0 UB','q mean','q LB','q UB','alpha mean','alpha LB','alpha UB'};
@@ -747,6 +747,13 @@ if method1==3 | method1==4  %save parameter alpha. VAR=mean+alpha*mean; VAR=mean
     rollparams=[MCSES(:,1:7)];
     T2 = array2table(rollparams);
     T2.Properties.VariableNames(1:7) = {'i_th-ranked model','r MCSE','p MCSE','a MCSE','K0 MCSE','q MCSE','alpha MCSE'};
+
+    SCIs=[param_rs(:,1) log10(param_rs(:,4)./param_rs(:,3)) log10(param_ps(:,4)./param_ps(:,3)) log10(param_as(:,4)./param_as(:,3)) log10(param_K0s(:,4)./param_K0s(:,3)) log10(param_qs(:,4)./param_qs(:,3)) log10(param_alphas(:,4)./param_alphas(:,3))];
+
+    rollparams=[SCIs(:,1:7)];
+    T3 = array2table(rollparams);
+    T3.Properties.VariableNames(1:7) = {'i_th-ranked model','r SCI','p SCI','a SCI','K0 SCI','q SCI','alpha SCI'};
+
 
 elseif method1==5
     rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end) param_alphas(:,2:end) param_ds(:,2:end)];
@@ -757,6 +764,13 @@ elseif method1==5
     T2 = array2table(rollparams);
     T2.Properties.VariableNames(1:8) = {'i_th-ranked model','r MCSE','p MCSE','a MCSE','K0 MCSE','q MCSE','alpha MCSE','d MCSE'};
 
+    SCIs=[param_rs(:,1) log10(param_rs(:,4)./param_rs(:,3)) log10(param_ps(:,4)./param_ps(:,3)) log10(param_as(:,4)./param_as(:,3)) log10(param_K0s(:,4)./param_K0s(:,3)) log10(param_qs(:,4)./param_qs(:,3)) log10(param_alphas(:,4)./param_alphas(:,3)) log10(param_ds(:,4)./param_ds(:,3))];
+
+    rollparams=[SCIs(:,1:8)];
+    T3 = array2table(rollparams);
+    T3.Properties.VariableNames(1:8) = {'i_th-ranked model','r SCI','p SCI','a SCI','K0 SCI','q SCI','alpha SCI','d SCI'};
+
+
 else
     rollparams=[param_rs(:,1:end) param_ps(:,2:end) param_as(:,2:end) param_K0s(:,2:end) param_qs(:,2:end)];
     T = array2table(rollparams);
@@ -766,11 +780,19 @@ else
     T2 = array2table(rollparams);
     T2.Properties.VariableNames(1:6) = {'i_th-ranked model','r MCSE','p MCSE','a MCSE','K0 MCSE','q MCSE'};
 
+    SCIs=[param_rs(:,1) log10(param_rs(:,4)./param_rs(:,3)) log10(param_ps(:,4)./param_ps(:,3)) log10(param_as(:,4)./param_as(:,3)) log10(param_K0s(:,4)./param_K0s(:,3)) log10(param_qs(:,4)./param_qs(:,3))];
+
+    rollparams=[SCIs(:,1:6)];
+    T3 = array2table(rollparams);
+    T3.Properties.VariableNames(1:6) = {'i_th-ranked model','r SCI','p SCI','a SCI','K0 SCI','q SCI'};
+
 end
 
 writetable(T,strcat('./output/parameters-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 writetable(T2,strcat('./output/MCSES-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
+writetable(T3,strcat('./output/SCIs-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 % <========================================================================================>
 % <============ Plot estimated number of sub-epidemics and total epidemic size across top-ranked models============>
