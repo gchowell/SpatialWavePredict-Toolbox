@@ -79,7 +79,7 @@ P0=[r p a K q 1 1];
 % <==============================================================================>
 % <================= Set range of C_thr values (onset_thrs) =====================>
 % <==============================================================================>
-cumcurve1 = cumsum(smooth(data1(:,2),smoothfactor1));
+cumcurve1 = cumsum(smoothdata(data1(:,2),'movmean',smoothfactor1));
 onset_thrs = linspace(cumcurve1(1),cumcurve1(end),length(data1(:,2)));
 onset_thrs = [0 onset_thrs(1:end-1)];
 
@@ -104,7 +104,7 @@ count1 = 1;
 % <================================================================================================>
 % <==== Evaluate AICc across models with different number of subepidemics and C_thr values ========>
 % <================================================================================================>
-ydata = smooth(data,smoothfactor1);
+ydata = smoothdata(data,'movmean',smoothfactor1);
 
 for npatches2 = npatchess
     npatches = npatches2;
@@ -185,7 +185,7 @@ for npatches2 = npatchess
             typedecline1 = typedecline2(j);
 
             % ******** MLE estimation method  *********
-            ydata = smooth(data,smoothfactor1);
+            ydata = smoothdata(data,'movmean',smoothfactor1);
 
             options = optimoptions('fmincon', ...
                 'Algorithm','sqp', ...

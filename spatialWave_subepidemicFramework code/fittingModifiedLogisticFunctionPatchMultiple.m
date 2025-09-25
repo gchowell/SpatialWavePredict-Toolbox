@@ -170,7 +170,7 @@ hold on
 %method1=3; %LSQ=0, MLE Poisson=1, Pearson chi-squared=2, MLE (Neg Binomial)=3
 
 
-ydata=smooth(data,smoothfactor1);
+ydata=smoothdata(data,'movmean',smoothfactor1);
 
 options=optimoptions('fmincon','Algorithm','sqp','StepTolerance',1.0000e-9,'MaxFunEvals',20000,'MaxIter',20000);
 
