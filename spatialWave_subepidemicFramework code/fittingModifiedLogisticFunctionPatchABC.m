@@ -177,7 +177,7 @@ for npatches2 = npatchess
     starts_base = starts_base(inB & finiteReal, :);                                % === CHANGED
     if isempty(starts_base), starts_base = z0; end                                 % === CHANGED
     sp = CustomStartPointSet(starts_base);                                        % === CHANGED
-    useParallel = ~isempty(gcp('nocreate'));                                      % === CHANGED
+    %useParallel = ~isempty(gcp('nocreate'));                                      % === CHANGED
     % ================================================================================
 
     for onset_thr = onset_thrs
@@ -199,7 +199,7 @@ for npatches2 = npatchess
             % === CHANGED: MultiStart configured to reuse LHS seeds and parallel if available
             problem = createOptimProblem('fmincon', ...
                         'objective',f, 'x0',z0, 'lb',LB, 'ub',UB, 'options',options);  % === CHANGED
-            ms = MultiStart('Display','off', 'UseParallel',useParallel, ...
+            ms = MultiStart('Display','off', 'UseParallel',false, ...
                             'StartPointsToRun','bounds-ineqs');                         % === CHANGED
             [P,fval,flagg,outpt,allmins] = run(ms,problem,sp);                          % === CHANGED
             % ==========================================================================
