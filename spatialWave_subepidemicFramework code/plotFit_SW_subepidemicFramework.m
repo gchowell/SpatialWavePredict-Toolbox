@@ -109,7 +109,9 @@ typedecline2=typedecline2_INP; % 1=exponential decline in subepidemic size; 2=po
 % <======== Number of best fitting models used to generate ensemble model ========================>
 % <==============================================================================>
 
-topmodels1=1:topmodelsx_INP;
+finalRanking=loadSpatialWaveFinalRanking(strcat('./output/ABC-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flagss2(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'.mat'));
+% Only the selected/refitted models have finalized rank files.
+topmodels1=1:min(topmodelsx_INP,finalRanking.numModels);
 
 % <=======================================================================================>
 % <========== Initialize variables to store results across top-ranked models ===========================>
@@ -165,6 +167,8 @@ for rank1=topmodels1
     % <================================ Load model results ====================================>
     % <========================================================================================>
 
+    modelIdentity=load(strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'),'fitRunId','fitResult');
+    assertSpatialWaveFitIdentity(modelIdentity,rank1,finalRanking);
     load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'))
 
     rank1
@@ -480,7 +484,7 @@ for rank1=topmodels1
     set(gca,'FontSize',16)
     set(gcf,'color','white')
 
-    title(strcat(num2ordinal(rank1),' Ranked Model'))
+    title(strcat(num2ordinal(rank1),' Selected Refit'))
 
     % <========================================================================================>
     % <================================ Store model fit quantiles ======================================>
@@ -594,7 +598,7 @@ for rank1=topmodels1
     xlabel('Number of sub-epidemics')
     ylabel('Frequency')
 
-    title(strcat(num2ordinal(rank1),' Ranked Model'))
+    title(strcat(num2ordinal(rank1),' Selected Refit'))
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
@@ -641,7 +645,7 @@ figure(300)
 subplot(2,2,1)
 line1=plot(MAECSS(:,1),MAECSS(:,4),'k-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('MAE')
 
 set(gca,'FontSize', 16);
@@ -650,7 +654,7 @@ set(gcf,'color','white')
 subplot(2,2,2)
 line1=plot(MSECSS(:,1),MSECSS(:,4),'k-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('MSE')
 
 set(gca,'FontSize', 16);
@@ -659,7 +663,7 @@ set(gcf,'color','white')
 subplot(2,2,3)
 line1=plot(PICSS(:,1),PICSS(:,4),'k-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('Coverage of the 95% PI')
 
 set(gca,'FontSize', 16);
@@ -668,7 +672,7 @@ set(gcf,'color','white')
 subplot(2,2,4)
 line1=plot(WISCSS(:,1),WISCSS(:,4),'k-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('WIS')
 
 set(gca,'FontSize', 16);
@@ -692,7 +696,7 @@ figure(400)
 subplot(3,2,1)
 line1=plot(param_rs(:,1),param_rs(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('r')
 
 set(gca,'FontSize', 16);
@@ -701,7 +705,7 @@ set(gcf,'color','white')
 subplot(3,2,2)
 line1=plot(param_ps(:,1),param_ps(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('p')
 
 set(gca,'FontSize', 16);
@@ -710,7 +714,7 @@ set(gcf,'color','white')
 subplot(3,2,3)
 line1=plot(param_as(:,1),param_as(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('a')
 
 set(gca,'FontSize', 16);
@@ -719,7 +723,7 @@ set(gcf,'color','white')
 subplot(3,2,4)
 line1=plot(param_K0s(:,1),param_K0s(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('K_0')
 
 set(gca,'FontSize', 16);
@@ -728,7 +732,7 @@ set(gcf,'color','white')
 subplot(3,2,5)
 line1=plot(param_qs(:,1),param_qs(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('q')
 
 set(gca,'FontSize', 16);
@@ -802,7 +806,7 @@ figure(500)
 subplot(1,2,1)
 line1=plot(numsubepidemicss(:,1),numsubepidemicss(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('Number of sub-epidemics')
 
 set(gca,'FontSize', 24);
@@ -811,7 +815,7 @@ set(gcf,'color','white')
 subplot(1,2,2)
 line1=plot(totepisizess(:,1),totepisizess(:,2:end),'-o');
 set(line1,'linewidth',2)
-xlabel('i_{th}Ranked Model')
+xlabel('Rank among selected refits')
 ylabel('Total epidemic wave size')
 
 set(gca,'FontSize', 24);

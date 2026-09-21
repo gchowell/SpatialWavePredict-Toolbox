@@ -322,11 +322,53 @@ for outbreak1=outbreakx
 
     [RMSESx,PS,npatches,onset_thr,typedecline1,~]=fittingModifiedLogisticFunctionPatchABC(datafilename2,data1,DT,t_window,M,flag1,typedecline2,numstartpoints);
 
-    AICmin=RMSESx(1,4);
-
+    % Deduplicate the search table once, with parameter/score alignment.
+    [RMSESx,searchUniqueIndex]=unique(RMSESx,'rows','stable');
+    PS=PS(searchUniqueIndex,:);
+    topmodelsx=min(topmodelsx,size(RMSESx,1));
+    if topmodelsx<1
+        error('SpatialWave:NoSelectedFits','No valid selected models are available.');
+    end
+    AICmin=min(RMSESx(:,4));
     relativelik_i=exp((AICmin-RMSESx(:,4))/2);
 
+    % Stage in search-selection order. Final rank names are assigned only
+    % after ALL selected accepted curves have their own recomputed AICc.
+    % No additional model optimization or bootstrap pass is introduced.
+    stageDir=tempname('./output');
+    mkdir(stageDir);
+    stagedFiles=cell(topmodelsx,1);
+    finalFiles=cell(topmodelsx,1);
 
+    for rank1=1:topmodelsx
+        
+        [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d,fitResult]=fittingModifiedLogisticFunctionPatchMultiple(RMSESx,relativelik_i,PS,data1,DT,t_window,M,flag1,numstartpoints,rank1);
+  
+        cadfilename1=strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',datafilename2(1:end-4),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat');
+        
+        finalFiles{rank1}=cadfilename1;
+        stageFile=fullfile(stageDir,sprintf('selected-%d.mat',rank1));
+        stagedFiles{rank1}=stageFile;
+        save(stageFile,'-mat')
+        
+        strcat('selected-model-',num2str(rank1),'-complete!')
+    end
+
+    rankingFile=strcat('./output/FinalFit-original-npatchesfixed-',num2str(npatches_fixed), ...
+        '-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)), ...
+        '-smoothing-',num2str(smoothfactor1),'-',datafilename2(1:end-4), ...
+        '-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1), ...
+        '-calibrationperiod-',num2str(calibrationperiod1),'.mat');
+    finalRanking=finalizeSpatialWaveFits(stagedFiles,finalFiles,rankingFile);
+    rmdir(stageDir,'s');
+    fprintf(['Final ranks cover %d selected/refitted models. ' ...
+        'The complete search-stage ranking remains in the ABC file.\n'], ...
+        finalRanking.numModels);
+    RMSESx=finalRanking.RMSES;
+    PS=finalRanking.PS;
+    relativelik_i=finalRanking.relativelik_i;
+    evidenceRatio=finalRanking.evidenceRatio;
+    % Display FINAL scores and likelihoods, not stale search-stage values.
     if 1  %plot relative likelihoods of the models
 
         figure(99)
@@ -336,7 +378,7 @@ for outbreak1=outbreakx
 
         set(line1,'LineWidth',2)
 
-        xlabel('i_{th} ranked model')
+        xlabel('Rank among selected refits')
         ylabel('AICc')
         set(gca,'FontSize', 24);
         set(gcf,'color','white')
@@ -348,7 +390,7 @@ for outbreak1=outbreakx
 
         set(line1,'LineWidth',2)
 
-        xlabel('i_{th} ranked model')
+        xlabel('Rank among selected refits')
         ylabel('Relative likelihood')
         set(gca,'FontSize', 24);
         set(gcf,'color','white')
@@ -364,7 +406,7 @@ for outbreak1=outbreakx
 
         set(line1,'LineWidth',2)
 
-        xlabel('i_{th} ranked model')
+        xlabel('Rank among selected refits')
         ylabel('Evidence ratio')
         set(gca,'FontSize', 24);
         set(gcf,'color','white')
@@ -372,24 +414,7 @@ for outbreak1=outbreakx
 
     end
 
-    index1=find(evidenceRatio<100); %check top models with evidence ratio < 100
 
-
-    % <===========================================================================================>
-    % <======= Derive uncertainty for the <topmodelsx> best fitting models and save results =============================>
-    % <===========================================================================================>
-
-
-    for rank1=1:topmodelsx
-        
-        [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d]=fittingModifiedLogisticFunctionPatchMultiple(RMSESx,relativelik_i,PS,data1,DT,t_window,M,flag1,numstartpoints,rank1);
-  
-        cadfilename1=strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',datafilename2(1:end-4),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat');
-        
-        save(cadfilename1,'-mat')
-        
-        strcat('rank-',num2str(rank1),'-complete!')
-    end
     
 end
 

@@ -116,7 +116,9 @@ typedecline2=typedecline2_INP; % 1=exponential decline in subepidemic size; 2=po
 % <================= Number of best fitting models used to generate ensemble model ===============>
 % <==============================================================================>
 
-topmodels1=1:topmodelsx_INP;
+finalRanking=loadSpatialWaveFinalRanking(strcat('./output/ABC-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'.mat'));
+% Only the selected/refitted models have finalized rank files.
+topmodels1=1:min(topmodelsx_INP,finalRanking.numModels);
 
 if npatches_fixed==1
     topmodels1=1;
@@ -225,6 +227,8 @@ for run_id=-1
         % <================================ Load model results =========================================>
         % <========================================================================================>
 
+        modelIdentity=load(strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rankx),'.mat'),'fitRunId','fitResult');
+        assertSpatialWaveFitIdentity(modelIdentity,rankx,finalRanking);
         load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rankx),'.mat'))
 
         rankx
@@ -439,7 +443,7 @@ for run_id=-1
 
         if printscreen1
 
-            title(strcat(num2ordinal(rank1),' Ranked Model'))
+            title(strcat(num2ordinal(rank1),' Selected Refit'))
 
             line1=plot(data1(:,1),data1(:,2),'ko');
             set(line1,'LineWidth',2)
@@ -611,7 +615,7 @@ for run_id=-1
 
             ylabel(strcat(caddisease,{' '},datatype))
 
-            title(strcat(num2ordinal(rank1),' Ranked Model'))
+            title(strcat(num2ordinal(rank1),' Selected Refit'))
 
             %title(strcat('Sub-epidemic Model Forecast-',{' '},getUSstateName(outbreakx),{' '},'- Reported by',{' '},caddate1))
 
@@ -626,20 +630,15 @@ for run_id=-1
         % <================================ Save short-term forecast results ==================================>
         % <=========================================================================================>
 
-        save(strcat('./output/Forecast-modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-forecastingperiod-',num2str(forecastingperiod),'-rank-',num2str(rankx),'.mat'),'curvesforecasts1','curvesforecasts2','datevecfirst1','datevecend1','timevect','timevect2','timelags','cadtemporal','data1')
+        save(strcat('./output/Forecast-modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-forecastingperiod-',num2str(forecastingperiod),'-rank-',num2str(rankx),'.mat'),'curvesforecasts1','curvesforecasts2','datevecfirst1','datevecend1','timevect','timevect2','timelags','cadtemporal','data1','fitRunId','fitResult')
 
 
         % <=============================================================================================>
         % <=================== Plot data for the forecast period (if getperformance=1) ==================================>
         % <=============================================================================================>
 
-        datenum1=datenum([str2num(caddate1(7:10)) str2num(caddate1(1:2)) str2num(caddate1(4:5))]);
-
-        if (DT~=365)
-
-            datenum1=datenum1+DT;
-
-        end
+        % Use the same verification-date rule as the ensemble path.
+        datenum1=getSpatialWaveVerificationDate(caddate1,DT);
 
         if getperformance && forecastingperiod>0
 
@@ -811,7 +810,7 @@ if getperformance
     subplot(2,2,1)
     line1=plot(MAEFSS(index2,1),MAEFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
-    xlabel('i_{th}Ranked Model')
+    xlabel('Rank among selected refits')
     ylabel('MAE')
 
     set(gca,'FontSize', 16);
@@ -820,7 +819,7 @@ if getperformance
     subplot(2,2,2)
     line1=plot(MSEFSS(index2,1),MSEFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
-    xlabel('i_{th}Ranked Model')
+    xlabel('Rank among selected refits')
     ylabel('MSE')
 
     set(gca,'FontSize', 16);
@@ -829,7 +828,7 @@ if getperformance
     subplot(2,2,3)
     line1=plot(PIFSS(index2,1),PIFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
-    xlabel('i_{th}Ranked Model')
+    xlabel('Rank among selected refits')
     ylabel('Coverage of the 95% PI')
 
     set(gca,'FontSize', 16);
@@ -839,7 +838,7 @@ if getperformance
 
     line1=plot(WISFSS(index2,1),WISFSS(index2,4),'k-o');
     set(line1,'linewidth',2)
-    xlabel('i_{th}Ranked Model')
+    xlabel('Rank among selected refits')
     ylabel('WIS')
 
     set(gca,'FontSize', 16);
@@ -913,5 +912,4 @@ if getperformance
     writetable(T,strcat('./output/performance-forecasting-Ensemble-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 end
-
 

@@ -3,12 +3,13 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d]=fittingModifiedLogisticFunction(RMSES,relativelik_i,PS,data1,DT,epidemic_period,M,flagX,numstartpoints,rank1)
+function [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d,fitResult]=fittingModifiedLogisticFunctionPatchMultiple(RMSES,relativelik_i,PS,data1,DT,epidemic_period,M,flagX,numstartpoints,rank1)
 
 
 global flag1 timevect ydata yfit
 
-global I0 npatches onset_thr typefit1
+% The optimization objective reads typedecline1 from the global workspace.
+global I0 npatches onset_thr typedecline1
 
 flag1=flagX;
 
@@ -42,6 +43,7 @@ close all
 % remove repeated rows
 [RMSES,index1]=unique(RMSES,'rows','stable');
 PS=PS(index1,:);
+relativelik_i=relativelik_i(index1);
 
 index1=rank1;
 
@@ -53,10 +55,20 @@ onset_thr=RMSES(index1,2);
 
 typedecline1=RMSES(index1,3);
 
-AICc_best=RMSES(index1,4);
-RelLik_best=relativelik_i(index1);
+if ~isscalar(typedecline1) || ~isfinite(typedecline1) || ~ismember(typedecline1,[1 2])
+    error('SpatialWave:InvalidDeclineFamily', ...
+        ['The selected decline family must be 1 (exponential) or ' ...
+         '2 (power-law). Received %g.'], typedecline1);
+end
+
+searchAICc=RMSES(index1,4);
+searchRelativeLikelihood=relativelik_i(index1);
+% A refit alone has no valid final relative likelihood until all selected
+% accepted fits have been rescored. The runner fills this after reranking.
+RelLik_best=NaN;
 
 P0=PS(index1,:);
+P0_search=P0;
 
 numparams=get_nparams(method1,dist1,npatches,flag1,1,onset_fixed);
 
@@ -161,7 +173,7 @@ hold on
 %options = optimoptions('lsqcurvefit','UseParallel',true,...
 %    'TolX',10^(-5),'TolFun',10^(-5));
 
-%[P,resnorm,residual,exitflag,output,lambda,J]=lsqcurvefit(@plotModifiedLogisticGrowthPatch1,z,timevect,smooth(data,smoothfactor1),LB,UB,options,I0,npatches,onset_thr,flag1,typefit1);
+%[P,resnorm,residual,exitflag,output,lambda,J]=lsqcurvefit(@plotModifiedLogisticGrowthPatch1,z,timevect,smooth(data,smoothfactor1),LB,UB,options,I0,npatches,onset_thr,flag1,typedecline1);
 
 % resnorm is the SSE which is given by sum(residual.^2)
 % P is the vector with the estimated parameters
@@ -254,6 +266,15 @@ if onset_fixed==0
 end
 
 bestfit=totinc;
+
+% Freeze a matched accepted result BEFORE bootstrap fits overwrite P, fval
+% and ydata. Score the actual displayed/saved curve with the same arithmetic
+% used by the optimization objective; retain the optimizer value separately.
+fitResult=makeSpatialWaveAcceptedFit(P,P0_search,bestfit,x,data1,ydata, ...
+    method1,dist1,npatches,flag1,onset_thr,typedecline1,onset_fixed, ...
+    fval,flagg,outpt,rank1,searchAICc,searchRelativeLikelihood);
+AICc_best=fitResult.AICc;
+numparams=fitResult.numParameters;
 
 % normal distribution of the error structure
 if method1==0 & dist1==0
@@ -377,4 +398,10 @@ for real=1:M
                 
     Phatss(real,:)=P;
     
+end
+
+% Public point estimates correspond to bestfit and AICc_best, not the search
+% initializer or the last bootstrap optimization. P0_search is in fitResult.
+P0=fitResult.parameters;
+d=P0(end);
 end

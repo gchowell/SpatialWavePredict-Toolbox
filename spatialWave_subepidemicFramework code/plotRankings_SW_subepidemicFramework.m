@@ -121,12 +121,16 @@ for run_id=-1
     end
     
     
-    load (strcat('./output/ABC-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'.mat'))
-    
-    % remove repeated rows
-    [RMSES,index1]=unique(RMSES,'rows','stable');
-    PS=PS(index1,:);
-    
+    finalRanking=loadSpatialWaveFinalRanking(strcat('./output/ABC-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'.mat'));
+    RMSES=finalRanking.RMSES;
+    PS=finalRanking.PS;
+    relativelik_i=finalRanking.relativelik_i;
+    topmodels1=1:min(topmodelsx_INP,finalRanking.numModels);
+    data1=finalRanking.fits{1}.data;
+    data=data1(:,2);
+    timevect=data1(:,1);
+    I0=data(1);
+
     AICc_bests=[AICc_bests full(RMSES(topmodels1,4))];
     
     AICcs=RMSES(topmodels1,4);
@@ -142,7 +146,7 @@ for run_id=-1
         
         set(line1,'LineWidth',2)
         
-        xlabel('i_{th} Ranked Model')
+        xlabel('Rank among selected refits')
         ylabel('AICc')
         set(gca,'FontSize', 24);
         set(gcf,'color','white')
@@ -154,7 +158,7 @@ for run_id=-1
         
         set(line1,'LineWidth',2)
         
-        xlabel('i_{th} Ranked Model')
+        xlabel('Rank among selected refits')
         ylabel('Relative likelihood')
         set(gca,'FontSize', 24);
         set(gcf,'color','white')
@@ -168,7 +172,7 @@ for run_id=-1
         
         set(line1,'LineWidth',2)
         
-        xlabel('i_{th} Ranked Model')
+        xlabel('Rank among selected refits')
         ylabel('Evidence ratio')
         set(gca,'FontSize', 24);
         set(gcf,'color','white')
@@ -252,36 +256,11 @@ for run_id=-1
         end
         
         
-        IC=zeros(npatches,1);
-        
-        IC(1,1)=I0;
-        IC(2:end,1)=1;
-        
-        
-        invasions=zeros(npatches,1);
-        timeinvasions=zeros(npatches,1);
-        Cinvasions=zeros(npatches,1);
-        
-        invasions(1)=1;
-        timeinvasions(1)=0;
-        Cinvasions(1)=0;
-        
-        
-        timevect
-        
-        npatches
-        
-        onset_thr
-        
-        flag1
-        
-        typedecline1
-        
-        
-        [~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[],r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
-        
-       
-  
+        % Display the exact component trajectories associated with this
+        % accepted score; a new solve could use different initialization.
+        acceptedFit=finalRanking.fits{index1};
+        x=acceptedFit.componentCurves;
+
         for j=1:npatches
             
             incidence1=[x(1,j);diff(x(:,j))];
@@ -293,17 +272,9 @@ for run_id=-1
             
         end
         
-        y=sum(x,2);
-        
-        totinc=[y(1,1);diff(y(:,1))];
-        
-        if onset_thr>0
-            totinc(1)=totinc(1)-(npatches-1);
-        end
-        
+        totinc=acceptedFit.bestfit;
         bestfit=totinc;
-        
-        
+
         hold on
         line1=plot(timevect,data,'bo')
         set(line1,'Linewidth',2,'markerSize',8)
@@ -319,7 +290,7 @@ for run_id=-1
         set(gcf,'color','white')
         
         
-        title(strcat(num2ordinal(index1),{' '},' Ranked Model; AICc=',num2str(AICc_best,6)))
+        title(strcat(num2ordinal(index1),{' '},' Selected Refit; AICc=',num2str(AICc_best,6)))
         
         legend(strcat('Sub-epidemics=',num2str(npatches),'; C_{thr}=',num2str(onset_thr)))
         

@@ -107,9 +107,10 @@ count1 = 1;
 ydata = smoothdata(data,'movmean',smoothfactor1);
 
 for npatches2 = npatchess
-    npatches = npatches2;
+    % Keep the configured search dimension separate from activated counts.
+    configuredNpatches = npatches2;
 
-    if (onset_fixed==1 || npatches==1)
+    if (onset_fixed==1 || configuredNpatches==1)
         onset_thrs = 0;
     else
         onset_thrs = onset_thrs2;
@@ -182,6 +183,9 @@ for npatches2 = npatchess
 
     for onset_thr = onset_thrs
         for j = 1:length(typedecline2)
+            % Each threshold/family candidate starts with its own configured
+            % dimension, irrespective of how many components activated before.
+            npatches = configuredNpatches;
             typedecline1 = typedecline2(j);
 
             % ******** MLE estimation method  *********
@@ -228,13 +232,13 @@ for npatches2 = npatchess
             [~,x] = ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[], ...
                            r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
 
-            if sum(invasions) < npatches
-                npatches = sum(invasions);
-            end
+            % Preserve the existing activated-count reporting/AICc policy,
+            % without changing the configured dimension used by later fits.
+            activatedNpatches = min(configuredNpatches,sum(invasions));
 
-            AICc = getAICc(method1,dist1,npatches,flag1(1),1,fval,length(ydata),onset_fixed);
+            AICc = getAICc(method1,dist1,activatedNpatches,flag1(1),1,fval,length(ydata),onset_fixed);
 
-            RMSES(count1,:) = [npatches onset_thr typedecline1 AICc];
+            RMSES(count1,:) = [activatedNpatches onset_thr typedecline1 AICc];
             PS(count1,:)    = P;
             count1 = count1 + 1;
         end % typedecline1

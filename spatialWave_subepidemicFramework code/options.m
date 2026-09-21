@@ -89,7 +89,7 @@ dist1 = 0;                % Error structure assumption:
                           % 5 = MLE Negative Binomial (VAR = mean + alpha * mean^d)
                           % 6 = SAD (Laplace distribution).
 
-numstartpoints = 10;      % Number of initial guesses for parameter optimization (MultiStart).
+numstartpoints = 20;      % Number of initial guesses for parameter optimization (MultiStart).
 B = 300;                  % Number of bootstrap realizations for uncertainty characterization.
 
 % <============================================================================>
@@ -116,6 +116,6 @@ flag1 = 1;                % Growth model type:
 onset_fixed = 0;          % Boolean: Fix onset timing of sub-epidemics:
                           % 1 = Fixed onset at time 0, 0 = Flexible onset.
 
-typedecline2 = [2];       % Type of functional decline for sub-epidemic sizes:
+typedecline2 = [1];       % Type of functional decline for sub-epidemic sizes:
                           % 1 = Exponential decline.
                           % 2 = Power-law decline.
