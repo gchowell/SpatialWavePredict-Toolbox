@@ -20,13 +20,9 @@ For the methodology and illustrated applications, see the [2024 tutorial][tutori
 
 For the generalized-logistic building block (`flag1=1`) with exponential decline in successive sub-epidemic sizes (`typedecline2=[1]`), the cumulative size of an **active** sub-epidemic follows
 
-$$
-\frac{dC_j(t)}{dt}
-=
-rC_j(t)^p\left(1-\frac{C_j(t)}{K_j}\right),
-\qquad
-K_j=K_0e^{-q(j-1)}.
-$$
+```math
+\frac{dC_j(t)}{dt} = rC_j(t)^p\left(1-\frac{C_j(t)}{K_j}\right), \qquad K_j = K_0 e^{-q(j-1)}.
+```
 
 | Symbol | Interpretation |
 | --- | --- |
