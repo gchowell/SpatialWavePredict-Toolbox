@@ -4,7 +4,7 @@
 
 SpatialWavePredict represents an epidemic wave as the aggregate of overlapping sub-epidemics. This structure can describe trajectories that are difficult to capture with a single growth curve, including multiple peaks, prolonged plateaus, and damped oscillations. The toolbox combines parameter estimation, model ranking, parametric bootstrap uncertainty, forecast visualization, and performance evaluation.
 
-[Quick start](#quick-start) · [Input data](#input-data) · [Configuration](#configuration) · [Outputs](#outputs) · [Limitations](#interpretation-and-current-limitations) · [Citation](#citation)
+[Quick start](#quick-start) · [Input data](#input-data) · [Configuration](#configuration) · [Outputs](#outputs) · [Citation](#citation)
 
 > **Research software:** validate the numerical results and uncertainty estimates for your dataset and configuration. The [current limitations](#interpretation-and-current-limitations) apply to the implementation, not just to the interpretation of its plots.
 
