@@ -16,6 +16,28 @@ The workflow fits candidate models, selects and refits top candidates, ranks the
 
 For the methodology and illustrated applications, see the [2024 tutorial][tutorial] and the [original framework paper][framework]. Published comparisons apply to the datasets, methods, and forecast horizons evaluated in those studies; they do not establish universal forecasting superiority.
 
+### Default model and parameters
+
+For the generalized-logistic building block (`flag1=1`) with exponential decline in successive sub-epidemic sizes (`typedecline2=[1]`), the cumulative size of an **active** sub-epidemic follows
+
+$$
+\frac{dC_j(t)}{dt}
+=
+rC_j(t)^p\left(1-\frac{C_j(t)}{K_j}\right),
+\qquad
+K_j=K_0e^{-q(j-1)}.
+$$
+
+| Symbol | Interpretation |
+| --- | --- |
+| $C_j(t)$ | Cumulative size of sub-epidemic $j$ at time $t$. |
+| $r$ | Growth-rate coefficient shared across sub-epidemics. |
+| $p$ | Early-growth scaling exponent; $p=1$ gives approximately exponential early growth when $C_j(t)\ll K_j$. |
+| $K_0$ | Carrying capacity of the first sub-epidemic. |
+| $q$ | Decline parameter across successive sub-epidemics: $q=0$ gives equal carrying capacities, while $q>0$ gives progressively smaller capacities. |
+
+With threshold-triggered onset (`onset_fixed=0`), each subsequent component activates when the preceding component reaches the onset threshold, $C_{\mathrm{thr}}$ (`onset_thr` in the model function). Inactive components do not grow. See [the implemented model equations][ode] for the activation rule and alternative growth functions.
+
 ## Requirements and installation
 
 The fitting and bootstrap workflow uses MATLAB and the following products:
@@ -212,7 +234,7 @@ For `dist1`, `0` denotes normal errors, `1` Poisson errors, `2` a variance-to-me
 | `-1` | Equal weights |
 | `1` | Akaike relative-likelihood weights; the default |
 | `0` | Legacy inverse-AICc weights; requires positive AICc and is not standard Akaike weighting |
-| `2` | Inverse calibration-WIS weights; based on in-sample fit, not held-out forecasts |
+| `2` | Inverse weighted interval score (WIS) weights calculated on calibration data; based on in-sample fit, not held-out forecasts |
 
 The [AICc-weight helper][weights] uses the final selected-refit scores. With more than one selected model, the driver constructs ensembles of the top two, top three, and so on, up to the available requested count. A prior-forecast-WIS branch exists in the code, but the driver does not provide a complete rolling-origin weighting workflow; do not interpret that branch as validated historical-performance weighting.
 
@@ -234,7 +256,7 @@ Results are written to `output/`. Exact filenames encode many, but not all, anal
 
 The dated trajectory tables use `year`, `month`, `day`, `data`, `median`, `LB`, and `UB`. They can contain both calibration and forecast rows; distinguish these using the forecast origin. Quantile tables must be aligned to the calibration length and target dates rather than assumed to contain forecast-only rows.
 
-Performance routines calculate point-error and interval-based measures, including MAE, MSE, prediction-interval coverage, and WIS. Some horizon-indexed results summarize **the first h forecast observations together**, rather than the single observation at horizon h; check [the scoring routine][metrics] before combining results across origins. Assess interval coverage together with interval width and score, not coverage alone.
+Performance routines calculate point-error and interval-based measures, including mean absolute error (MAE), mean squared error (MSE), prediction-interval coverage, and weighted interval score (WIS). Some horizon-indexed results summarize **the first h forecast observations together**, rather than the single observation at horizon h; check [the scoring routine][metrics] before combining results across origins. Assess interval coverage together with interval width and score, not coverage alone.
 
 ## Reproducibility and troubleshooting
 
