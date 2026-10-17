@@ -345,6 +345,9 @@ z(6)=alpha;
 z(7)=d;
 
 
+% Bootstrap counts for user-facing diagnostics only.
+acceptedBootstrap = 0;
+
 for real=1:M
     
     yirData=AddPoissonError(yi,1,dist1,factor1,d_hat);
@@ -396,9 +399,17 @@ for real=1:M
     
     [P,fval,flagg,outpt,allmins] = run(ms,problem,allpts);
                 
+    acceptedBootstrap = acceptedBootstrap + (flagg > 0 && isfinite(fval));
+
     Phatss(real,:)=P;
     
 end
+
+% Print bootstrap counts only; do not change fitting or retained results.
+fprintf('\nBootstrap summary for ranked model %d:\n', rank1);
+fprintf('Requested bootstrap datasets: %d\n', M);
+fprintf('Accepted bootstrap datasets: %d\n', acceptedBootstrap);
+fprintf('Unresolved bootstrap datasets: %d\n\n', M - acceptedBootstrap);
 
 % Public point estimates correspond to bestfit and AICc_best, not the search
 % initializer or the last bootstrap optimization. P0_search is in fitResult.
