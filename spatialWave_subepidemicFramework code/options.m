@@ -89,6 +89,12 @@ dist1 = 0;                % Error structure assumption:
                           % 5 = MLE Negative Binomial (VAR = mean + alpha * mean^d)
                           % 6 = SAD (Laplace distribution).
 
+% The error structure that goes with the estimation method: methods 1, 3, 4, 5
+% and 6 leave no choice (dist1 = method1), so dist1 above matters only for
+% method1 = 0. The fit driver and the plotting and forecast scripts apply the
+% same rule again (spatialWaveErrorStructure.m), also for older options files.
+dist1 = spatialWaveErrorStructure(method1, dist1);
+
 numstartpoints = 20;      % Number of initial guesses for parameter optimization (MultiStart).
 B = 300;                  % Number of bootstrap realizations for uncertainty characterization.
 
@@ -97,7 +103,7 @@ B = 300;                  % Number of bootstrap realizations for uncertainty cha
 % <============================================================================>
 % Configuration for sub-epidemic wave models.
 
-npatches_fixed = 3;       % Maximum number of sub-epidemics considered in the model fit.
+npatches_fixed = 6;       % Maximum number of sub-epidemics considered in the model fit.
 
 topmodelsx = 4;           % Number of best-fitting models (based on AICc) used to generate ensemble models:
                           % If npatches_fixed=1, topmodelsx is set to 1.
@@ -108,14 +114,15 @@ end
 
 flag1 = 1;                % Growth model type:
                           % 0 = GGM (Generalized Growth Model)
-                          % 1 = GLM (Logistic Model)
+                          % 1 = GLM (Generalized Logistic Model)
                           % 2 = GRM (Generalized Richards Model)
-                          % 3 = LM (Linear Model)
-                          % 4 = Richards Model.
+                          % 3 = LM (Logistic Model)
+                          % 4 = Richards Model
+                          % 5 = Gompertz Model, r*C*log(K/C).
 
 onset_fixed = 0;          % Boolean: Fix onset timing of sub-epidemics:
                           % 1 = Fixed onset at time 0, 0 = Flexible onset.
 
-typedecline2 = [1];       % Type of functional decline for sub-epidemic sizes:
+typedecline2 = [1,2];       % Type of functional decline for sub-epidemic sizes:
                           % 1 = Exponential decline.
                           % 2 = Power-law decline.

@@ -1,7 +1,7 @@
 function [objfunction,yfit] = getSpatialWaveObjective(ydata,yfit,method1,alpha,d)
 %GETSPATIALWAVEOBJECTIVE Shared legacy scoring of one incidence curve.
 % This is the original objective arithmetic, including zero replacement,
-% count-wise negative-binomial sums and omitted likelihood constants.
+% the negative-binomial sums (now vectorized) and omitted likelihood constants.
 % It intentionally does not change the estimator or its data conventions.
 % The second output is the effective curve used for scoring (zeros -> .001).
 
@@ -33,59 +33,17 @@ else
             %Pearson chi squred
             objfunction=sum(((ydata-yfit).^2)./yfit);
             
-        case 3
-            % MLE Negative binomial (negative log-likelihood) where sigma^2=mean+alpha*mean;
-            
-            sum1=0;
-            
-            for i=1:length(ydata)
-                for j=0:(ydata(i)-1)
-                    
-                    sum1=sum1+log(j+(1/alpha)*yfit(i));
-                    
-                end
-                sum1=sum1+ydata(i)*log(alpha)-(ydata(i)+(1/alpha)*yfit(i))*log(1+alpha);
-                
-            end
-            
-            objfunction=-sum1;
-            
-        case 4
-            % MLE Negative binomial (negative log-likelihood) where sigma^2=mean+alpha*mean^2;
-            
-            sum1=0;
-            
-            for i=1:length(ydata)
-                for j=0:(ydata(i)-1)
-                    
-                    sum1=sum1+log(j+(1/alpha));
-                    
-                end
-                
-                sum1=sum1+ydata(i)*log(alpha*yfit(i))-(ydata(i)+(1/alpha))*log(1+alpha*yfit(i));
-                
-            end
-            
-            objfunction=-sum1;
-           
-
-        case 5
-            % MLE Negative binomial (negative log-likelihood) where sigma^2=mean+alpha*mean^d;
-
-            sum1=0;
-
-            for i=1:length(ydata)
-                for j=0:(ydata(i)-1)
-
-                    sum1=sum1+log(j+(1/alpha)*yfit(i).^(2-d));
-
-                end
-
-                sum1=sum1+ydata(i)*log(alpha*(yfit(i).^(d-2)).*yfit(i))-(ydata(i)+(1/alpha)*yfit(i).^(2-d))*log(1+alpha*(yfit(i).^(d-2)).*yfit(i));
-
-            end
-
-            objfunction=-sum1;
+        case {3,4,5}
+            % MLE negative binomial (negative log-likelihood without its
+            % data-only constant):
+            %   3  sigma^2 = mean + alpha*mean
+            %   4  sigma^2 = mean + alpha*mean^2
+            %   5  sigma^2 = mean + alpha*mean^d
+            % Revision SW-1: the same sums as before, evaluated with gammaln
+            % and no loop over the counts (spatialWaveNegativeBinomialNLL.m,
+            % from the SubEpiPredict toolbox). The loop made one pass per
+            % case per observation, which was very slow for large counts.
+            objfunction=spatialWaveNegativeBinomialNLL(ydata,yfit,alpha,d,method1);
 
         case 6 % Sum of Absolute Deviations (SAD)
 

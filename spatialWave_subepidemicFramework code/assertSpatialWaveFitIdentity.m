@@ -11,7 +11,7 @@ if ~isscalar(rank1) || rank1<1 || rank1>ranking.numModels || rank1~=fix(rank1)
     error('SpatialWave:InvalidModelSelection','Requested rank is outside the accepted-fit ranking.');
 end
 f=s.fitResult; reference=ranking.fits{rank1};
-fields={'rank','parameters','modelSpec','AICc','objectiveValue','bestfit','target','data'};
+fields={'rank','parameters','modelSpec','patchCap','AICc','objectiveValue','bestfit','target','data'};
 for j=1:numel(fields)
     key=fields{j};
     if ~isfield(f,key) || ~isequaln(f.(key),reference.(key))

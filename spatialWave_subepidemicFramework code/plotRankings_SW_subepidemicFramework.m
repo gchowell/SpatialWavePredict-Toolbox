@@ -28,6 +28,10 @@ global smoothfactor1 calibrationperiod1
 % options.m
 [cumulative1_INP, outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
 
+% Revision SW-1: the error structure that goes with the estimation method,
+% as in the fit driver, so the file names below match those of the fit.
+dist1=spatialWaveErrorStructure(method1,dist1);
+
 
 % <============================================================================>
 % <================================ Dataset ====================================>
@@ -187,20 +191,9 @@ for run_id=-1
     color1=['r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';'r-';'b-';'g-';'m-';'c-';'k-';'y-';];
 
 
-    factors=factor(length(topmodels1));
-
-
-    if length(factors)==1
-        rows=factors;
-        cols=1;
-
-    elseif length(factors)==3
-        rows=factors(1)*factors(2);
-        cols=factors(3);
-    else
-        rows=factors(1);
-        cols=factors(2);
-    end
+    % Revision SW-1: a grid that always holds every model (the grid built from
+    % the prime factors was too small for 16, 24, 32, ... models).
+    [rows,cols]=spatialWavePanelGrid(length(topmodels1));
 
 
 
@@ -261,9 +254,13 @@ for run_id=-1
         acceptedFit=finalRanking.fits{index1};
         x=acceptedFit.componentCurves;
 
-        for j=1:npatches
+        % Revision SW-1: incidence without the one-case seeds of the
+        % sub-epidemics that start later (spatialWaveIncidence.m).
+        [~,patchIncidence]=spatialWaveIncidence(x,acceptedFit.onsetFixed);
+
+        for j=1:min(size(x,2),size(color1,1))
             
-            incidence1=[x(1,j);diff(x(:,j))];
+            incidence1=patchIncidence(:,j);
             
             line1=plot(timevect,incidence1,color1(j,:))
             

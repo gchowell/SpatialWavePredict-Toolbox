@@ -1,207 +1,59 @@
-% <============================================================================>
-% < Author: Gerardo Chowell  ==================================================>
-% <============================================================================>
+function dx=modifiedLogisticGrowthPatch(t,x,r,p,a,Ks,flag1,activeMask)
+%MODIFIEDLOGISTICGROWTHPATCH Pure derivative of the spatial wave model for one segment.
+%   dx = modifiedLogisticGrowthPatch(t,x,r,p,a,Ks,flag1,activeMask)
+%
+%   x           cumulative state of every sub-epidemic (column)
+%   r, p, a     growth parameters shared by all sub-epidemics (scalars)
+%   Ks          size of each sub-epidemic, from spatialWaveSizes.m (the decline
+%               family and q are applied there, not here)
+%   flag1       0 GGM, 1 generalized logistic, 2 generalized Richards,
+%               3 logistic, 4 Richards, 5 Gompertz
+%   activeMask  which sub-epidemics grow during this integration segment
+%
+%   The function reads and changes no global variable. Which sub-epidemics are
+%   active is decided by simulateSpatialWave.m between segments, never here.
+%   Until revision SW-1 the activation flags were global variables that this
+%   function switched on while ode15s was integrating, also on trial steps the
+%   solver later rejected, so an activation could depend on the step sequence.
+%
+%   Gompertz (flag1 = 5) is r*x*log(K_j/x), as in the SubEpiPredict toolbox.
+%   It used to be r*x*exp(-a*t) with t the time since the START of the series:
+%   every later sub-epidemic was damped by a clock it had no part in, and K
+%   and q had no effect on the curve.
+%
+%   The earlier 11-argument call is rejected. Use simulateSpatialWave.m.
+%
+%   See also simulateSpatialWave, spatialWaveSizes
 
-function dx=modifiedLogisticGrowthPatch(t,x,r,p,a,K,npatches,onset_thr,q,flag1,typedecline1)
+if nargin~=8
+    error('SpatialWave:KernelInterface', ...
+        ['modifiedLogisticGrowthPatch now takes (t,x,r,p,a,Ks,flag1,activeMask). ', ...
+         'Call simulateSpatialWave for a complete trajectory.']);
+end
 
-global invasions
-global timeinvasions
-global Cinvasions
-
-
-dx=zeros(npatches,1);
+dx=zeros(numel(x),1);
+j=find(activeMask(:));
+if isempty(j)
+    return
+end
+xj=x(j);
+Kj=Ks(j);
+Kj=Kj(:);
 
 switch flag1
-    
-    
-    case 0 %GGM
-        
-        for j=1:npatches
-            
-            
-            if invasions(j)==0
-                
-                invasions(j)=(x(j-1,1)>=onset_thr);
-                timeinvasions(j)=invasions(j).*t;
-                Cinvasions(j)=invasions(j).*x(j-1,1);
-                
-                if (invasions(j)==0)
-                    break
-                end
-                
-            end
-            
-            %             switch typedecline1
-            %                 case 1
-            %
-            %                     K1=K*exp(-q*(j-1)); % exponential decline
-            %
-            %                 case 2
-            %
-            %                     K1=K*(1/j).^q; % inverse distance/gravity decline
-            %             end
-            
-            dx(j,1)=invasions(j).*(r*(x(j,1).^p));
-            
-            
-        end
-        
-        
-    case 1 %GLM
-        
-        for j=1:npatches
-            
-            %if j<2
-            
-            %    onset_thr1=onset_thr;
-            
-            %else
-            %    onset_thr1=onset_thr*exp(q*(j-2));
-            
-            %onset_thr1=K*(onset_thr./(onset_thr+(K-onset_thr)*exp(-q*(j-2))));
-            
-            %end
-            
-            
-            if invasions(j)==0
-                
-                invasions(j)=(x(j-1,1)>=onset_thr);
-                timeinvasions(j)=invasions(j).*t;
-                Cinvasions(j)=invasions(j).*x(j-1,1);
-                
-                if (invasions(j)==0)
-                    break
-                end
-                
-            end
-            
-            switch typedecline1
-                case 1
-                    
-                    K1=K*exp(-q*(j-1)); % exponential decline
-                    
-                case 2
-                    
-                    K1=K*(1/j).^q; % inverse distance/gravity decline
-            end
-            
-            dx(j,1)=invasions(j).*(r*(x(j,1).^p)*(1-(x(j,1)/K1)));
-            
-            
-        end
-        
-    case 2
-        
-        for j=1:npatches
-            
-            if invasions(j)==0
-                
-                
-                invasions(j)=(x(j-1,1)>=onset_thr);
-                timeinvasions(j)=invasions(j).*t;
-                Cinvasions(j)=invasions(j).*x(j-1,1);
-                
-            end
-            
-            
-            switch typedecline1
-                case 1
-                    
-                    K1=K*exp(-q*(j-1)); % exponential decline
-                    
-                case 2
-                    
-                    K1=K*(1/j).^q; % inverse distance/gravity decline
-            end
-            
-            
-            dx(j,1)=invasions(j).*(r*(x(j,1).^p)*(1-(x(j,1)/K1)).^a);
-            
-            
-        end
-        
-        
-    case 3
-        
-        for j=1:npatches
-            
-            if invasions(j)==0
-                
-                invasions(j)=(x(j-1,1)>=onset_thr);
-                timeinvasions(j)=invasions(j).*t;
-                Cinvasions(j)=invasions(j).*x(j-1,1);
-                
-            end
-            
-            switch typedecline1
-                case 1
-                    
-                    K1=K*exp(-q*(j-1)); % exponential decline
-                    
-                case 2
-                    
-                    K1=K*(1/j).^q; % inverse distance/gravity decline
-            end
-            
-            dx(j,1)=invasions(j).*(r*(x(j,1))*(1-(x(j,1)/K1)));
-            
-            
-        end
-        
-    case 4 %Richards
-        
-        for j=1:npatches
-            
-            if invasions(j)==0
-                
-                invasions(j)=(x(j-1,1)>=onset_thr);
-                timeinvasions(j)=invasions(j).*t;
-                Cinvasions(j)=invasions(j).*x(j-1,1);
-                
-            end
-            
-            switch typedecline1
-                case 1
-                    
-                    K1=K*exp(-q*(j-1)); % exponential decline
-                    
-                case 2
-                    
-                    K1=K*(1/j).^q; % inverse distance/gravity decline
-            end
-            
-            dx(j,1)=invasions(j).*(r*(x(j,1))*(1-(x(j,1)/K1).^a));
-            
-            
-        end
-        
-     
-         case 5 %Gompertz
-        
-        for j=1:npatches
-            
-            if invasions(j)==0
-                
-                invasions(j)=(x(j-1,1)>=onset_thr);
-                timeinvasions(j)=invasions(j).*t;
-                Cinvasions(j)=invasions(j).*x(j-1,1);
-                
-            end
-            
-            switch typedecline1
-                case 1
-                    
-                    K1=K*exp(-q*(j-1)); % exponential decline
-                    
-                case 2
-                    
-                    K1=K*(1/j).^q; % inverse distance/gravity decline
-            end
-            
-            dx(j,1)=invasions(j).*(r*(x(j,1))*exp(-a*t));
-            
-            
-        end
-        
-        
+    case 0 % GGM
+        dx(j)=r*xj.^p;
+    case 1 % generalized logistic
+        dx(j)=r*(xj.^p).*(1-xj./Kj);
+    case 2 % generalized Richards (existing expression retained)
+        dx(j)=r*(xj.^p).*(1-xj./Kj).^a;
+    case 3 % logistic
+        dx(j)=r*xj.*(1-xj./Kj);
+    case 4 % Richards
+        dx(j)=r*xj.*(1-(xj./Kj).^a);
+    case 5 % Gompertz
+        dx(j)=r*xj.*log(Kj./xj);
+    otherwise
+        error('SpatialWave:InvalidModelFlag','flag1 must be an integer from 0 to 5.');
+end
 end

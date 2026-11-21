@@ -3,7 +3,27 @@
 % < Author: Gerardo Chowell  ==================================================>
 % <============================================================================>
 
-function [performanceTop, performanceEns]=plotForecast_SW_subepidemicFramework(outbreakx_pass,caddate1_pass,forecastingperiod_pass,weight_type1_pass)
+function [performanceTop, performanceEns, performanceBaseline, scoresByHorizonOut, identifiabilityOut, forecastQuantilesOut]=plotForecast_SW_subepidemicFramework(outbreakx_pass,caddate1_pass,forecastingperiod_pass,weight_type1_pass)
+
+% Revision SW-3. Third output: the flat baseline at the full horizon,
+% [MAE MSE coverage WIS]. Fourth output: the scores of every horizon, the
+% table also written to performance-forecasting-byHorizon-...csv. Columns:
+% model (0 = baseline, k = ranked k, 100+k = Ensemble(k)), horizon, MAE, MSE,
+% coverage of the 95% PI, WIS, WIS relative to the baseline. The score of
+% horizon h is the average over the first h time units of the forecast.
+% Used by spatialWaveRollingForecast.m.
+performanceTop=[]; performanceEns=[]; performanceBaseline=[]; scoresByHorizonOut=[];
+% Revision SW-6. Fifth output: one row per ranked model, [rank, number of
+% estimated parameters, number of them identified] (spatialWaveIdentifiability.m).
+% The full report is written to identifiability-...csv.
+identifiabilityOut=zeros(0,3); piiRanked={}; piiRanks=[];
+% Revision SW-8. Sixth output: the quantile forecasts that were scored, one
+% row per model and forecast step: [model, step, observation, 23 quantiles]
+% (levels as in spatialWaveQuantileScores.m; model codes as in the fourth
+% output). spatialWaveRollingForecast.m keeps them so that intervals can be
+% widened by past forecast errors (spatialWaveModelErrorIntervals.m).
+forecastQuantilesOut=zeros(0,26);
+scoresByHorizon=[];
 
 % Generate short-term forecasts - incidence
 
@@ -27,6 +47,14 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 
 % options.m
 [cumulative1_INP, outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP, datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP, topmodelsx_INP, M_INP, flag1_INP,typedecline2_INP]=options
+
+% Revision SW-1: the error structure that goes with the estimation method,
+% as in the fit driver, so the file names below match those of the fit.
+dist1=spatialWaveErrorStructure(method1,dist1);
+
+% Revision SW-2: random seed (setting rngSeed), so the same forecast call on
+% the same fit files gives the same numbers.
+forecastRngInfo=spatialWaveSeed('Forecast');
 
 % options_forecast.m
 [getperformance_INP, deletetempfiles_INP, forecastingperiod_INP, weight_type1_INP]=options_forecast
@@ -124,18 +152,9 @@ if npatches_fixed==1
     topmodels1=1;
 end
 
-factors=factor(length(topmodels1));
-if length(factors)==1
-    rows=factors;
-    cols=1;
-
-elseif length(factors)==3
-    rows=factors(1)*factors(2);
-    cols=factors(3);
-else
-    rows=factors(1);
-    cols=factors(2);
-end
+% Revision SW-1: a grid that always holds every model (the grid built from
+% the prime factors was too small for 16, 24, 32, ... models).
+[rows,cols]=spatialWavePanelGrid(length(topmodels1));
 
 % <==============================================================================>
 % <========================== Forecasting parameters ============================>
@@ -229,7 +248,32 @@ for run_id=-1
 
         modelIdentity=load(strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rankx),'.mat'),'fitRunId','fitResult');
         assertSpatialWaveFitIdentity(modelIdentity,rankx,finalRanking);
+        fitSettings=[]; % revision SW-5: read from the fit file below (absent in fits made before SW-2)
+        bootstrapDiagnostics=[]; % revision SW-6: likewise
         load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rankx),'.mat'))
+
+        % Revision SW-5: day-of-week factors of this fit, estimated again from
+        % its calibration data with the fit settings saved in the fit file
+        % (not those in force now). weekdayCurve is [] when the fit was made
+        % without the adjustment.
+        weekday=spatialWaveWeekdayFactors(data1(:,2),fitSettings);
+
+        % Revision SW-6: identifiability report of this ranked model, from the
+        % refits and search bounds saved with the fit (no fit is repeated).
+        % The file is written again after every ranked model, so it holds
+        % all models read so far.
+        piiOne=spatialWaveSavedIdentifiability(Phatss,P0,bootstrapDiagnostics);
+        if ~isempty(piiOne)
+            piiRanked{end+1}=piiOne; %#ok<AGROW>
+            piiRanks(end+1)=rankx; %#ok<AGROW>
+            identifiabilityOut=[identifiabilityOut;[rankx piiOne.nFree piiOne.nIdentified]]; %#ok<AGROW>
+            spatialWaveWritePII(strcat('./output/identifiability-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'),piiRanked,piiRanks);
+            notNames=piiOne.name(strcmp(piiOne.verdict,'not identified'))';
+            if isempty(notNames), notText='none'; else, notText=strjoin(notNames,', '); end
+            if isempty(piiOne.tradeoffs), tradeText='none'; else, tradeText=strjoin(piiOne.tradeoffs',', '); end
+            fprintf('Identifiability of ranked model %d: %d of %d estimated parameter(s) identified; not identified: %s; trade-offs: %s\n', ...
+                rankx,piiOne.nIdentified,piiOne.nFree,notText,tradeText);
+        end
 
         rankx
         AICc_rank1=[AICc_rank1;[rank1 AICc_best]];
@@ -242,12 +286,23 @@ for run_id=-1
         %             break
         %         end
 
-        if npatches>1
-
-            npatches=npatches+10; %this line extends the traveling wave..
-
-        end
-
+        % Revision SW-1. The forecast simulates the model that was fitted: the
+        % number of sub-epidemics it was fitted with (patchCap), which can be
+        % larger than the number active so far. Beyond that the wave may
+        % travel on by spatialWaveForecastExtraPatches() further
+        % sub-epidemics, which can start only AFTER the calibration period,
+        % so every forecast curve equals its fitted curve over the
+        % calibration period. Before, "npatches+10" was applied from the
+        % first day (changing the curve inside the calibration period when
+        % the limit npatches_fixed was binding), and not at all to a wave
+        % model with one active sub-epidemic, which could then never start
+        % a second one.
+        patchCap=modelIdentity.fitResult.patchCap;
+        waveExtension=struct('extraPatches',spatialWaveForecastExtraPatches(), ...
+            'unlockTime',data1(end,1));
+        nSkippedRefits=0;
+        firstSkipMessage='';
+        nImmediateAtUnlock=0;
 
         d_hat=1;
 
@@ -310,41 +365,39 @@ for run_id=-1
 
             end
 
-            IC=zeros(npatches,1);
-
-            IC(1,1)=data1(1,2);
-            IC(2:end,1)=1;
-
-            invasions=zeros(npatches,1);
-            timeinvasions=zeros(npatches,1);
-            Cinvasions=zeros(npatches,1);
-
-            invasions(1)=1;
-            timeinvasions(1)=0;
-            Cinvasions(1)=0;
-
-
-            [~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect2,IC,[],r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
-
-            if length(x(:,1))~=length(timevect2)
-
+            try
+                weekdayCurve=spatialWaveWeekdayCurve(weekday,length(timevect2));
+                if isempty(weekdayCurve)
+                    I0forecast=data1(1,2);
+                else
+                    I0forecast=data1(1,2)/weekdayCurve(1);
+                end
+                [~,x,totinc,patchIncidence,activation]=simulateSpatialWave(timevect2,I0forecast,patchCap, ...
+                    onset_fixed,onset_thr,flag1,typedecline1,r_hat,p_hat,a_hat,K_hat,q_hat,[],waveExtension);
+            catch simulationError
+                % A refit that cannot be simulated over the forecast period
+                % is left out and counted (spatialWaveSkippedRefits.m).
+                if ~strncmp(simulationError.identifier,'SpatialWave:',12)
+                    rethrow(simulationError);
+                end
+                nSkippedRefits=nSkippedRefits+1;
+                if isempty(firstSkipMessage)
+                    firstSkipMessage=simulationError.message;
+                end
                 continue
-
             end
+            nImmediateAtUnlock=nImmediateAtUnlock+double(activation.immediateAtUnlock);
 
-            x=real(x);
-
-            y=sum(x,2);
-
-            totinc=[y(1,1);diff(y(:,1))];
-
-            totinc(1)=totinc(1)-(npatches-1);
+            if ~isempty(weekdayCurve) % revision SW-5: the curve on the scale of the data
+                totinc=totinc(:).*weekdayCurve;
+                patchIncidence=bsxfun(@times,patchIncidence,weekdayCurve);
+            end
 
             bestfit=totinc;
 
-            for j=1:npatches
+            for j=1:min(size(patchIncidence,2),size(color1,1))
 
-                incidence1=[x(1,j);diff(x(:,j))];
+                incidence1=patchIncidence(:,j);
 
                 if printscreen1
                     plot(timevect2,incidence1,color1(j,:))
@@ -369,6 +422,17 @@ for run_id=-1
 
         end
 
+        % Revision SW-1: one policy for refits that could not be simulated.
+        spatialWaveSkippedRefits('Forecast',rankx,nSkippedRefits,M,firstSkipMessage);
+        nForecastCurves=size(curvesforecasts1,2);
+        if nImmediateAtUnlock>0
+            warning('SpatialWave:PatchLimitBinding', ...
+                ['Ranked model %d: in %d of %d forecast curves a further sub-epidemic starts on the first ', ...
+                 'forecast day, because the limit npatches_fixed = %d held it back during calibration. ', ...
+                 'Consider fitting with a larger npatches_fixed.'], ...
+                rankx,nImmediateAtUnlock,nForecastCurves,npatches_fixed);
+        end
+
         [quantilesc,quantilesf]=computeQuantiles(data1,curvesforecasts2,forecastingperiod);
 
         quantilescs=[quantilescs;quantilesc];
@@ -387,13 +451,18 @@ for run_id=-1
 
         % compute doubling times
 
-        meandoublingtime=zeros(M,1);
+        % Revision SW-1: meandoublingtime starts empty. It used to start as M zeros
+        % and the means were appended after them, so half of the values behind the
+        % mean doubling time and its interval were zeros. Curves that never double
+        % (NaN) are left out.
+        % The loops run over the curves that exist (refits can be skipped).
+        meandoublingtime=[];
 
-        doublingtimess=zeros(30,M)+NaN;
+        doublingtimess=zeros(30,nForecastCurves)+NaN;
 
         maxd=1;
 
-        for j=1:M
+        for j=1:nForecastCurves
 
             [tds,C0data,curve,doublingtimes]=getDoublingTimeCurve(max(curvesforecasts1(:,j),0),DT,0);
 
@@ -406,7 +475,7 @@ for run_id=-1
             meandoublingtime=[meandoublingtime;mean(doublingtimes)];
         end
 
-        doublingtimess=doublingtimess(1:maxd,1:M);
+        doublingtimess=doublingtimess(1:maxd,1:nForecastCurves);
 
         seq_doublingtimes=[];
 
@@ -414,16 +483,21 @@ for run_id=-1
 
             index1=find(~isnan(doublingtimess(j,:)));
 
-            seq_doublingtimes=[seq_doublingtimes;[j mean(doublingtimess(j,index1)) quantile(doublingtimess(j,index1),0.025) quantile(doublingtimess(j,index1),0.975) length(index1)./M]];
+            seq_doublingtimes=[seq_doublingtimes;[j mean(doublingtimess(j,index1)) quantile(doublingtimess(j,index1),0.025) quantile(doublingtimess(j,index1),0.975) length(index1)./nForecastCurves]];
 
         end
 
         seq_doublingtimes % [ith doubling, mean, 95%CI LB, 95%CI UB, prob. i_th doubling]
 
         % Mean doubling times
-        dmean=mean(meandoublingtime);
-        dLB=quantile(meandoublingtime,0.025);
-        dUB=quantile(meandoublingtime,0.975);
+        meandoublingtime=meandoublingtime(~isnan(meandoublingtime));
+        if isempty(meandoublingtime) % no curve doubled
+            dmean=NaN; dLB=NaN; dUB=NaN;
+        else
+            dmean=mean(meandoublingtime);
+            dLB=quantile(meandoublingtime,0.025);
+            dUB=quantile(meandoublingtime,0.975);
+        end
 
         param_doubling=[dmean dLB dUB]
 
@@ -694,11 +768,19 @@ for run_id=-1
 
             [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1]=computeforecastperformance(data1,datalatest2,curvesforecasts1,curvesforecasts2,forecastingperiod);
 
-            [WISC,WISFS]=computeWIS(data1,datalatest2,curvesforecasts2,forecastingperiod)
+            [WISC,WISFS,~,quantilesfModel]=computeWIS(data1,datalatest2,curvesforecasts2,forecastingperiod);
+            if forecastingperiod>0 % revision SW-8
+                forecastQuantilesOut=[forecastQuantilesOut;[rankx+zeros(forecastingperiod,1) (1:forecastingperiod)' datalatest2(size(data1,1)+(1:forecastingperiod)',2) quantilesfModel]]; %#ok<AGROW>
+            end
 
             WISC_hash(rankx,1)=WISC;  %save WISC for the model to be used to weight the models in the ensemble in function getensemblesubepidemics
 
             WISF_hash(rankx,run_id+1)=WISFS(end,end);  %save WISF for the model to be used to weight the models in the ensemble in function getensemblesubepidemics
+
+            % Revision SW-3: the forecast scores of every horizon
+            if forecastingperiod>0
+                scoresByHorizon=[scoresByHorizon;[rankx+zeros(forecastingperiod,1) MAEFS_model1(:,1) MAEFS_model1(:,2) MSEFS_model1(:,2) PIFS_model1(:,2) WISFS(:,2)]]; %#ok<AGROW>
+            end
 
 
             % store metrics for calibration
@@ -766,6 +848,14 @@ for run_id=-1
                 MISFSS=[MISFSS;[100+rankx outbreakx datenum(caddate1) MISFS_model1(end,end)]];
 
                 WISFSS=[WISFSS;[100+rankx outbreakx datenum(caddate1) WISFS(end,end)]];
+            end
+
+            % Revision SW-3: the forecast scores of every horizon
+            if getperformance && forecastingperiod>0 && size(MAEFS_model1,1)==forecastingperiod
+                scoresByHorizon=[scoresByHorizon;[100+rankx+zeros(forecastingperiod,1) MAEFS_model1(:,1) MAEFS_model1(:,2) MSEFS_model1(:,2) PIFS_model1(:,2) WISFS(:,2)]]; %#ok<AGROW>
+                if isequal(size(quantilesf),[forecastingperiod 23]) % revision SW-8
+                    forecastQuantilesOut=[forecastQuantilesOut;[100+rankx+zeros(forecastingperiod,1) (1:forecastingperiod)' datalatest2(size(data1,1)+(1:forecastingperiod)',2) quantilesf]]; %#ok<AGROW>
+                end
             end
 
             % store the first 3 ensemble forecasts including the 95% Prediction interval.
@@ -911,5 +1001,83 @@ if getperformance
     T.Properties.VariableNames(1:5) = {'Ensemble(i) model','MAE','MSE','Coverage 95%PI','WIS'};
     writetable(T,strcat('./output/performance-forecasting-Ensemble-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
-end
+    % <=============================================================================================>
+    % <======= Revision SW-3: flat baseline, and the forecast scores of every horizon ================>
+    % <=============================================================================================>
+    % The baseline (spatialWaveBaselineForecast.m) repeats the mean of the last
+    % observations, with uncertainty from the errors the same rule made earlier
+    % in the calibration data. It is scored with the functions that score the
+    % models, so its rows can be compared with theirs. A model is worth using at
+    % a horizon when its WIS there is below the baseline's.
+    if forecastingperiod>0
 
+        baselineSettings=spatialWaveFitSettings();
+        baselineWindow=baselineSettings.baselineWindow;
+        if isempty(baselineWindow)
+            if DT==1
+                baselineWindow=7; % daily data: one week, to average the weekly reporting cycle
+            else
+                baselineWindow=1; % weekly or yearly data: the last observation
+            end
+        end
+
+        baseline=spatialWaveBaselineForecast(data1(:,2),forecastingperiod,baselineWindow);
+
+        % curves in the layout of the model curves: calibration rows hold the data
+        % (they are not scored), forecast rows hold the baseline
+        baselineCurves1=[data1(:,2);baseline.point];
+        baselineCurves2=[repmat(data1(:,2),1,size(baseline.samples,2));baseline.samples];
+
+        [~,~,~,~,~,~,MSEFS_base,MAEFS_base,PIFS_base]=computeforecastperformance(data1,datalatest2,baselineCurves1,baselineCurves2,forecastingperiod);
+
+        if all(isfinite(baseline.samples(:)))
+            [~,WISFS_base,~,quantilesfBase]=computeWIS(data1,datalatest2,baselineCurves2,forecastingperiod);
+            forecastQuantilesOut=[[zeros(forecastingperiod,1) (1:forecastingperiod)' datalatest2(size(data1,1)+(1:forecastingperiod)',2) quantilesfBase];forecastQuantilesOut];
+        else
+            % too few past errors for an interval: point scores only
+            WISFS_base=[(1:forecastingperiod)' NaN(forecastingperiod,1)];
+            PIFS_base(:,2)=NaN;
+            warning('SpatialWave:BaselineWithoutInterval', ...
+                ['The calibration series is too short to give the flat baseline an interval at every horizon ', ...
+                 '(%d observations, window %d, horizon %d). Its MAE and MSE are reported; its WIS and coverage are not.'], ...
+                size(data1,1),baseline.window,forecastingperiod);
+        end
+
+        % model code 0 = baseline; then the ranked models, then the ensembles (100 + k)
+        scoresByHorizon=[[zeros(forecastingperiod,1) MAEFS_base(:,1) MAEFS_base(:,2) MSEFS_base(:,2) PIFS_base(:,2) WISFS_base(:,2)];scoresByHorizon];
+        scoresByHorizon=sortrows(scoresByHorizon,[1 2]);
+
+        % WIS of each row relative to the baseline at the same horizon (below 1 = better than the baseline)
+        relativeWIS=scoresByHorizon(:,6)./WISFS_base(scoresByHorizon(:,2),2);
+
+        T = array2table([scoresByHorizon relativeWIS]);
+        T.Properties.VariableNames(1:7) = {'model','horizon','MAE','MSE','Coverage 95%PI','WIS','WIS relative to baseline'};
+        writetable(T,strcat('./output/performance-forecasting-byHorizon-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+
+        % fourth output of the function: the table just written
+        scoresByHorizonOut=[scoresByHorizon relativeWIS];
+
+        % third output of the function: the baseline at the full horizon
+        performanceBaseline=[MAEFS_base(end,2) MSEFS_base(end,2) PIFS_base(end,2) WISFS_base(end,2)];
+
+        % the full horizon on the screen: baseline first, then the models
+        atEnd=scoresByHorizon(:,2)==forecastingperiod;
+        rowsEnd=[scoresByHorizon(atEnd,:) relativeWIS(atEnd)];
+        fprintf('\nForecast scores over %d time unit(s). Baseline: flat at %.6g, the mean of the last %d observation(s).\n', ...
+            forecastingperiod,baseline.level,baseline.window);
+        fprintf('  %-14s %10s %10s %10s %14s\n','model','MAE','coverage','WIS','WIS/baseline');
+        for rowEnd=1:size(rowsEnd,1)
+            if rowsEnd(rowEnd,1)==0
+                modelLabel='baseline';
+            elseif rowsEnd(rowEnd,1)>100
+                modelLabel=sprintf('Ensemble(%d)',rowsEnd(rowEnd,1)-100);
+            else
+                modelLabel=sprintf('ranked %d',rowsEnd(rowEnd,1));
+            end
+            fprintf('  %-14s %10.2f %10.1f %10.2f %14.2f\n',modelLabel,rowsEnd(rowEnd,3),rowsEnd(rowEnd,5),rowsEnd(rowEnd,6),rowsEnd(rowEnd,7));
+        end
+        fprintf('  (scores of every horizon from 1 to %d are in the file performance-forecasting-byHorizon-... in ./output)\n',forecastingperiod);
+
+    end
+
+end

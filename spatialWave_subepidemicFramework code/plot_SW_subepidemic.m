@@ -229,38 +229,24 @@ end
 timevect=0:1:windowsize1;
 
 
-IC=zeros(npatches,1);
-
-IC(1,1)=I0;
-IC(2:end,1)=1;
-
-invasions=zeros(npatches,1);
-timeinvasions=zeros(npatches,1);
-Cinvasions=zeros(npatches,1);
-
-invasions(1)=1;
-timeinvasions(1)=0;
-Cinvasions(1)=0;
-
-[~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[],r1,p1,a1,K1,npatches,onset_thr,q1,flag1,typedecline1);
+% Revision SW-1: the simulator of the fit and the forecast
+% (simulateSpatialWave.m), with sub-epidemics that start one after another
+% (onset_fixed = 0). The incidence of each sub-epidemic no longer shows its
+% one-case seed at the first time point.
+[~,x,totinc,patchIncidence]=simulateSpatialWave(timevect,I0,npatches,0,onset_thr,flag1,typedecline1,r1,p1,a1,K1,q1);
 
 
 for j=1:npatches
 
-    incidence1=[x(1,j);diff(x(:,j))];
+    incidence1=patchIncidence(:,j);
 
-    line1=plot(timevect,incidence1,color1(j,:))
+    line1=plot(timevect,incidence1,color1(mod(j-1,size(color1,1))+1,:))
 
     set(line1,'Linewidth',2)
     hold on
 
 end
 
-y=sum(x,2);
-totinc=[y(1,1);diff(y(:,1))];
-if onset_thr>0
-    totinc(1)=totinc(1)-(npatches-1);
-end
 bestfit=totinc;
 
 line1=plot(timevect,totinc,'k')

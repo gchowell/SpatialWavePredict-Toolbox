@@ -50,6 +50,33 @@ else
 end
 
 
+% Revision SW-1. Several areas: each area is fitted and saved as if the driver
+% had been called for that area alone. Before, the data matrix was cleared
+% after the first area, so the second one failed, and the output file names
+% were built from the whole vector outbreakx.
+if numel(outbreakx)>1
+    for area1=outbreakx(:)'
+        Run_SW_subepidemicFramework(area1,caddate1);
+    end
+    return
+end
+
+% Revision SW-1. The error structure that goes with the estimation method,
+% the same in the fit and in the plotting and forecast scripts, and a check
+% of all settings before anything is fitted.
+dist1=spatialWaveErrorStructure(method1,dist1);
+% Revision SW-5: the day-of-week adjustment is for daily data.
+weekdayCheck=spatialWaveFitSettings();
+if weekdayCheck.weekdayAdjustment && DT_INP~=1
+    error('SpatialWave:InvalidSettings', ...
+        'weekdayAdjustment = true (options_fit_settings_sw.m) is for daily data; options.m has DT = %g.',DT_INP);
+end
+checkSpatialWaveSettings(struct('method1',method1,'dist1',dist1,'flag1',flag1_INP, ...
+    'typedecline2',typedecline2_INP,'npatches_fixed',npatches_fixed,'onset_fixed',onset_fixed, ...
+    'smoothfactor1',smoothfactor1,'calibrationperiod1',calibrationperiod1, ...
+    'numstartpoints',numstartpoints_INP,'topmodelsx',topmodelsx_INP,'B',M_INP,'DT',DT_INP, ...
+    'cumulative1',cumulative1_INP,'outbreakx',outbreakx));
+
 cadregion=cadregion_INP; % string indicating the region of the time series (USA, Chile, Mexico, Nepal, etc)
 
 caddisease=caddisease_INP; % string indicating the name of the disease
@@ -186,6 +213,10 @@ data=load(strcat('./input/',datafilename1)); % load time series dataset (rows=ti
 if isempty(data)
     error('The dataset is empty')
 end
+if outbreakx>size(data,2)
+    error('SpatialWave:InvalidSettings', ...
+        'outbreakx = %d, but the data file %s has %d column(s).',outbreakx,datafilename1,size(data,2));
+end
 
 dataprov=data';
 
@@ -194,6 +225,15 @@ timelags=0; % keeps track of the epidemic onset timing (nonzero case)
 for outbreak1=outbreakx
 
     close all
+
+    % Revision SW-2. Random seed (setting rngSeed) and the settings of the
+    % fitting layer; both are saved with the results of each ranked model.
+    rngInfo=spatialWaveSeed(sprintf('Fit of area %d',outbreak1));
+    fitSettings=spatialWaveFitSettings();
+    fitRevision=spatialWaveFitRevision();
+    % Revision SW-3: the number of top models asked for, before it is reduced
+    % to the number of candidates; spatialWaveRollingForecast.m compares it.
+    topmodelsRequested=topmodelsx;
 
     data1=dataprov(outbreak1,:)'; % Cumulative curve
 
@@ -225,6 +265,11 @@ for outbreak1=outbreakx
     % <=============================================================================================>
 
     index1=find(data1>0);
+
+    if isempty(index1)
+        error('SpatialWave:EmptySeries', ...
+            'Area %d has no positive observation in the calibration period.',outbreak1);
+    end
 
     data1=data1(index1(1):end,1);
 
@@ -325,6 +370,11 @@ for outbreak1=outbreakx
     % Deduplicate the search table once, with parameter/score alignment.
     [RMSESx,searchUniqueIndex]=unique(RMSESx,'rows','stable');
     PS=PS(searchUniqueIndex,:);
+    % Candidates the data cannot support (AICc = Inf, more parameters than
+    % n-1 observations allow) are never selected (revision SW-1).
+    supportedRows=isfinite(RMSESx(:,4));
+    RMSESx=RMSESx(supportedRows,:);
+    PS=PS(supportedRows,:);
     topmodelsx=min(topmodelsx,size(RMSESx,1));
     if topmodelsx<1
         error('SpatialWave:NoSelectedFits','No valid selected models are available.');
@@ -342,7 +392,7 @@ for outbreak1=outbreakx
 
     for rank1=1:topmodelsx
         
-        [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d,fitResult]=fittingModifiedLogisticFunctionPatchMultiple(RMSESx,relativelik_i,PS,data1,DT,t_window,M,flag1,numstartpoints,rank1);
+        [Phatss,npatches,onset_thr,typedecline1,curves,bestfit,data1,P0,AICc_best,RelLik_best,factor1,d,fitResult,bootstrapDiagnostics]=fittingModifiedLogisticFunctionPatchMultiple(RMSESx,relativelik_i,PS,data1,DT,t_window,M,flag1,numstartpoints,rank1);
   
         cadfilename1=strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',datafilename2(1:end-4),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat');
         
@@ -361,6 +411,19 @@ for outbreak1=outbreakx
         '-calibrationperiod-',num2str(calibrationperiod1),'.mat');
     finalRanking=finalizeSpatialWaveFits(stagedFiles,finalFiles,rankingFile);
     rmdir(stageDir,'s');
+
+    % Revision SW-2. Report (do not remove) ranked models with the same curve
+    % over the calibration period: wave candidates whose threshold was not
+    % reached. See spatialWaveSameCurveModels.m.
+    sameCurvePairs=spatialWaveSameCurveModels(finalRanking.fits);
+    if ~isempty(sameCurvePairs)
+        warning('SpatialWave:SameCurveModels', ...
+            ['Ranked models %s have the same fitted curve over the calibration period. They differ only in an ', ...
+             'onset threshold that was not reached, so the data do not tell them apart; their forecasts ', ...
+             'differ through C_thr and q alone. Consider a smaller topmodelsx.'], ...
+            strjoin(arrayfun(@(k) sprintf('%d and %d',sameCurvePairs(k,1),sameCurvePairs(k,2)), ...
+            (1:size(sameCurvePairs,1)),'UniformOutput',false),', '));
+    end
     fprintf(['Final ranks cover %d selected/refitted models. ' ...
         'The complete search-stage ranking remains in the ABC file.\n'], ...
         finalRanking.numModels);

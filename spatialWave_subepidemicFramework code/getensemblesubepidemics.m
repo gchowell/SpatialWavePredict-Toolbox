@@ -227,7 +227,11 @@ end
 
 % compute doubling times
 
-meandoublingtime=zeros(M1,1);
+% Revision SW-1: meandoublingtime starts empty. It used to start as M zeros
+% and the means were appended after them, so half of the values behind the
+% mean doubling time and its interval were zeros. Curves that never double
+% (NaN) are left out.
+meandoublingtime=[];
 
 doublingtimess=zeros(30,M1)+NaN;
 
@@ -263,9 +267,14 @@ end
 seq_doublingtimes % [ith doubling, mean, 95%CI LB, 95%CI UB, prob. i_th doubling]
 
 % Mean doubling times
-dmean=mean(meandoublingtime);
-dLB=quantile(meandoublingtime,0.025);
-dUB=quantile(meandoublingtime,0.975);
+meandoublingtime=meandoublingtime(~isnan(meandoublingtime));
+if isempty(meandoublingtime) % no curve doubled
+    dmean=NaN; dLB=NaN; dUB=NaN;
+else
+    dmean=mean(meandoublingtime);
+    dLB=quantile(meandoublingtime,0.025);
+    dUB=quantile(meandoublingtime,0.975);
+end
 
 param_doubling=[dmean dLB dUB]
 

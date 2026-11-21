@@ -4,6 +4,32 @@
 
 function [RMSES,PS,npatches,onset_thr,typedecline1,P]=fittingModifiedLogisticFunctionPatchABC( ...
     datafilename1,data1,DT,epidemic_period,M,flagX,typedecline2,numstartpoints)
+%FITTINGMODIFIEDLOGISTICFUNCTIONPATCHABC Search over the candidate spatial wave models.
+%   Fits every candidate (number of sub-epidemics, onset threshold, decline
+%   family) and ranks the fits by AICc.
+%
+%   RMSES  one row per fitted candidate, best first:
+%          [active sub-epidemics, C_thr, decline family, AICc]
+%   PS     the fitted parameters of each row, [r p a K q alpha d]
+%
+%   Revision SW-2. Every candidate is fitted by fitSpatialWaveModel.m: only
+%   the free parameters are optimized, each mapped to [0,1] (r, K and alpha on
+%   a log scale); the objective gets its model from an explicit context, not
+%   from global variables; every local minimum is evaluated again before it
+%   is accepted; and each fit returns diagnostics. What else changed here:
+%     * the fit of each threshold also starts from the solution of the
+%       previous threshold (setting continuationStart);
+%     * thresholds are added at the low end of the grid
+%       (spatialWaveThresholdGrid.m, setting thresholdLowPoints);
+%     * the single sub-epidemic candidate is fitted once, not once per decline
+%       family: the family has no effect on one sub-epidemic, and the two
+%       fits were the same model ranked twice;
+%     * a candidate without a converged, valid fit is left out and reported;
+%     * count likelihoods are fitted to the raw counts (spatialWaveFitSeries.m).
+%   Settings: spatialWaveFitSettings.m and options_fit_settings_sw.m.
+%
+%   The global variables below are still written, for scripts that read
+%   them; the fit itself no longer reads any of them.
 
 global flag1 method1 timevect ydata yfit
 global I0 npatches onset_thr typedecline1
@@ -26,11 +52,14 @@ global calibrationperiod1
 
 global LBe UBe
 
+fitSettings=spatialWaveFitSettings();
+odeOptions=spatialWaveOdeOptions();
+
 % <=============================================================================================>
-% <========= Set bounds for parameters associated with error structure (alpha and d) ===========>
+% <========= Bounds of alpha and d (kept in the globals for older scripts) =====================>
 % <=============================================================================================>
 switch method1
-    case {0,1,2}
+    case {0,1,2,6}
         LBe=[0 0];
         UBe=[0 0];
     case {3,4}
@@ -57,58 +86,87 @@ timevect = (data1(:,1));
 I0 = data(1); % initial condition
 
 % <==============================================================================>
-% <===================== Set initial parameter guesses ==========================>
+% <============ Series the objective is fitted to ===============================>
 % <==============================================================================>
-r=0.2;
-if flag1==3 % logistic model (p=1)
-    p=1;
-else
-    p=0.9;
+% Least squares and absolute deviations: the moving average of span
+% smoothfactor1, as before. Count likelihoods (methods 1, 3, 4, 5): the raw
+% counts; smoothfactor1 then only shapes the grid of onset thresholds.
+[ydata,fitSeriesInfo]=spatialWaveFitSeries(data,smoothfactor1,method1,fitSettings);
+
+% Revision SW-5: day-of-week factors (spatialWaveWeekdayFactors.m).
+% weekdayCurve is [] when no adjustment applies, and the search is then as
+% before. With the adjustment the model describes the series without the
+% weekly cycle, so its initial condition is the first observation divided by
+% its factor.
+weekday=spatialWaveWeekdayFactors(data,fitSettings,fitSeriesInfo);
+weekdayCurve=spatialWaveWeekdayCurve(weekday,length(data));
+if ~isempty(weekdayCurve)
+    I0=I0/weekdayCurve(1);
+    fprintf('Day-of-week factors, from the day of the first observation: %s\n',mat2str(weekday.byPosition',3));
 end
-a=1;
-K=sum(data1(:,2));
-q=0.3;
-
-if flag1==5
-    r=1-I0/K;            % r=1-C0/K
-    a=r/log(K/I0);       % r/log(K/C0)
+if fitSeriesInfo.smoothedCountLikelihood
+    warning('SpatialWave:SmoothedCountLikelihood', ...
+        ['method1 = %d fits a count likelihood to a %g-point moving average. The fitted dispersion ', ...
+         'will be too small and prediction intervals too narrow for the raw counts.'],method1,smoothfactor1);
+elseif any(method1==[1 3 4 5]) && smoothfactor1>1
+    fprintf(['method1 = %d is fitted to the raw counts. smoothfactor1 = %g is used only for the grid of ', ...
+        'onset thresholds.\n'],method1,smoothfactor1);
 end
 
-P0=[r p a K q 1 1];
+% <==============================================================================>
+% <============ Search space, seed and start points =============================>
+% <==============================================================================>
+% The parameters are shared by all sub-epidemics, so the bounds, the seed and
+% the start points are the same for every candidate. Rows of starts_base are
+% in original units; the Latin hypercube is drawn in unit coordinates, so r,
+% K and alpha are sampled log-uniformly.
+[LB,UB,isLog,z0]=spatialWaveSearchSpace(data,flag1,method1,fitSettings);
+P0=z0; % earlier name of the seed, kept in the saved workspace
+unitMap=spatialWaveUnitMap('make',struct('z0',z0,'LB',LB,'UB',UB,'isLog',isLog));
+nStarts=max(0,floor(numstartpoints));
+starts_base=spatialWaveStartPoints(unitMap,nStarts,0,z0);
 
 % <==============================================================================>
-% <================= Set range of C_thr values (onset_thrs) =====================>
+% <================= Onset thresholds and numbers of sub-epidemics ==============>
 % <==============================================================================>
-cumcurve1 = cumsum(smoothdata(data1(:,2),'movmean',smoothfactor1));
-onset_thrs = linspace(cumcurve1(1),cumcurve1(end),length(data1(:,2)));
-onset_thrs = [0 onset_thrs(1:end-1)];
+onset_thrs2=spatialWaveThresholdGrid(data,smoothfactor1,I0,fitSettings.thresholdLowPoints);
 
-% <==============================================================================>
-% <===== Set range of the possible number of subepidemics (1:npatches_fixed)=====>
-% <==============================================================================>
 if onset_fixed==1
     npatchess = 1:1:npatches_fixed;
-elseif onset_fixed==0
-    npatchess = [1 npatches_fixed];
+else
+    npatchess = unique([1 npatches_fixed]);
 end
 
-if (onset_fixed==1 || all(npatchess==1))
-    onset_thrs = 0;
-end
-onset_thrs2 = onset_thrs;
+RMSES = zeros(0,4);
+PS    = zeros(0,7);
 
-RMSES = sparse(1000,4);
-PS    = sparse(1000,7);
-count1 = 1;
+% One row per fitted candidate, in search order, rejected ones included.
+% candidateFitInfo{k} is the full fitInfo structure of row k.
+fitDiagnosticsColumns={'configured','onset_thr','typedecline','success','exitflag','nActive', ...
+    'startAgreement','gradientInfNorm','polishRun','polishImproved','nLocalRuns','nConvergedRuns','nAtBound','fval'};
+fitDiagnostics=zeros(0,numel(fitDiagnosticsColumns));
+candidateFitInfo={};
+rejectedCandidates=0;
+candidatesTooLarge=zeros(0,3); % [configured sub-epidemics, parameters, data points]
 
 % <================================================================================================>
 % <==== Evaluate AICc across models with different number of subepidemics and C_thr values ========>
 % <================================================================================================>
-ydata = smoothdata(data,'movmean',smoothfactor1);
-
 for npatches2 = npatchess
     % Keep the configured search dimension separate from activated counts.
     configuredNpatches = npatches2;
+
+    % AICc needs more data points than parameters plus one (getAICc.m). A
+    % candidate that is too large for this series is not fitted.
+    kCandidate=get_nparams(method1,dist1,configuredNpatches,flag1,1,onset_fixed);
+    if length(ydata)<=kCandidate+1
+        candidatesTooLarge(end+1,:)=[configuredNpatches kCandidate length(ydata)]; %#ok<AGROW>
+        warning('SpatialWave:CandidateTooLarge', ...
+            ['Models with %d sub-epidemic(s) have %d parameters, too many for the %d data points ', ...
+             '(AICc needs more than %d). They are left out of the search.'], ...
+            configuredNpatches,kCandidate,length(ydata),kCandidate+1);
+        continue
+    end
 
     if (onset_fixed==1 || configuredNpatches==1)
         onset_thrs = 0;
@@ -116,144 +174,90 @@ for npatches2 = npatchess
         onset_thrs = onset_thrs2;
     end
 
-    % <================================================================================================>
-    % <=========================== Set initial parameter guesses and bounds ===========================>
-    % <================================================================================================>
-    r  = P0(1); p = P0(2); a = P0(3); K = P0(4); q = P0(5);
-    alpha = P0(6); d = P0(7);
-
-    z = [r p a K q alpha d];  % seed in (r,p,a,K,q,alpha,d) order
-
-    rlb = mean(abs(data(1:min(2,end),1)))/200;
-    rub = max(abs(data(1:min(2,end),1)))*5;
-
-    switch flag1
-        case 0 % GGM
-            LB=[rlb  0 1  1 0 LBe];             % r p a K q alpha d
-            UB=[rub  1 1  1 0 UBe];
-        case 1 % GLM
-            LB=[rlb  0 1 20 0 LBe];
-            UB=[rub  1 1 1e8 5 UBe];
-        case 2 % GRM
-            LB=[rlb  0 0 20 0 LBe];
-            UB=[rub  1 10 1e8 5 UBe];
-        case 3 % Logistic
-            LB=[rlb  1 1 20 0 LBe];
-            UB=[rub  1 1 1e8 5 UBe];
-        case 4 % Richards
-            LB=[rlb  1 0 20 0 LBe];
-            UB=[rub  1 10 1e8 5 UBe];
-        case 5 % Gompertz
-            LB=[1e-4 1 0 20 0 LBe];
-            UB=[1e3  1 10 1e8 5 UBe];
+    % One sub-epidemic has one size: the decline family has no effect on it.
+    if configuredNpatches==1
+        families = typedecline2(1);
+    else
+        families = typedecline2;
     end
 
-    % --- safety: flip any LB>UB just in case --------------------------------
-    flipMask = LB > UB;
-    if any(flipMask)
-        tmp = LB(flipMask); LB(flipMask) = UB(flipMask); UB(flipMask) = tmp;
-    end
-    % ------------------------------------------------------------------------
+    for j = 1:length(families)
 
-    % === CHANGED: generate & reuse smarter MultiStart seeds (LHS + user seed) per (npatches, bounds)
-    z0   = min(max(z,LB),UB);                         % clamp seed into bounds      % === CHANGED
-    dDim = numel(LB);                                                             % === CHANGED
-    span = (UB - LB);                                                            % === CHANGED
-    nStarts = max(0, floor(numstartpoints));                                     % === CHANGED
+        % Accepted solution of the previous threshold of this family
+        % (continuation start); empty until one fit has been accepted.
+        previousP=[];
 
-    if nStarts > 0                                                                % === CHANGED
-        if exist('lhsdesign','file') == 2                                         % === CHANGED
-            X = lhsdesign(nStarts, dDim, 'criterion','maximin','iterations',50);  % === CHANGED
-        else                                                                       % === CHANGED
-            X = rand(nStarts, dDim);                                              % === CHANGED
-        end                                                                        % === CHANGED
-        starts_base = LB + X .* span;                                             % === CHANGED
-        starts_base = [starts_base; z0];     % include user seed                  % === CHANGED
-    else                                                                          % === CHANGED
-        starts_base = z0;                                                         % === CHANGED
-    end                                                                           % === CHANGED
-    starts_base = unique(round(starts_base,6),'rows');                            % === CHANGED
-    inB = all(starts_base >= (LB - 1e-12) & starts_base <= (UB + 1e-12), 2);      % === CHANGED
-    finiteReal = all(isfinite(starts_base),2) & isreal(starts_base);              % === CHANGED
-    starts_base = starts_base(inB & finiteReal, :);                                % === CHANGED
-    if isempty(starts_base), starts_base = z0; end                                 % === CHANGED
-    sp = CustomStartPointSet(starts_base);                                        % === CHANGED
-    %useParallel = ~isempty(gcp('nocreate'));                                      % === CHANGED
-    % ================================================================================
-
-    for onset_thr = onset_thrs
-        for j = 1:length(typedecline2)
-            % Each threshold/family candidate starts with its own configured
+        for onset_thr = onset_thrs
+            % Each threshold/family candidate is fitted with its own configured
             % dimension, irrespective of how many components activated before.
             npatches = configuredNpatches;
-            typedecline1 = typedecline2(j);
+            typedecline1 = families(j);
 
-            % ******** MLE estimation method  *********
-            ydata = smoothdata(data,'movmean',smoothfactor1);
+            % Explicit fit context: the objective reads nothing from globals.
+            context=struct('timevect',timevect,'ydata',ydata,'I0',I0, ...
+                'npatches',configuredNpatches,'onset_fixed',onset_fixed,'onset_thr',onset_thr, ...
+                'flag1',flag1,'typedecline1',typedecline1,'method1',method1,'odeOptions',odeOptions, ...
+                'weekdayFactor',weekdayCurve);
 
-            options = optimoptions('fmincon', ...
-                'Algorithm','sqp', ...
-                'StepTolerance',1.0e-9, ...
-                'MaxFunEvals',20000, ...
-                'MaxIter',20000);
+            % The solution of the previous threshold is an excellent start for
+            % this one. It is one more start point, never a replacement. A fit
+            % without one gets firstThresholdStartFactor times the start points.
+            starts=starts_base;
+            nStartsThisFit=nStarts;
+            if fitSettings.continuationStart && ~isempty(previousP)
+                starts=[starts_base;previousP];
+            elseif isempty(previousP) && fitSettings.firstThresholdStartFactor>1 && nStarts>0
+                nExtra=ceil((fitSettings.firstThresholdStartFactor-1)*nStarts);
+                extraStarts=spatialWaveStartPoints(unitMap,nExtra,0,z0);
+                starts=[extraStarts(1:end-1,:);starts_base]; % the seed is already the last row of starts_base
+                nStartsThisFit=nStarts+nExtra;
+            end
 
-            % Keep your original objective handle
-            f = @plotModifiedLogisticGrowthPatchMethods1;
+            [P,fval,fitInfo]=fitSpatialWaveModel(context,z0,LB,UB,isLog,starts,nStartsThisFit,fitSettings);
 
-            % === CHANGED: MultiStart configured to reuse LHS seeds and parallel if available
-            problem = createOptimProblem('fmincon', ...
-                        'objective',f, 'x0',z0, 'lb',LB, 'ub',UB, 'options',options);  % === CHANGED
-            ms = MultiStart('Display','off', 'UseParallel',false, ...
-                            'StartPointsToRun','bounds-ineqs');                         % === CHANGED
-            [P,fval,flagg,outpt,allmins] = run(ms,problem,sp);                          % === CHANGED
-            % ==========================================================================
+            candidateFitInfo{end+1,1}=fitInfo; %#ok<AGROW>
+            fitDiagnostics(end+1,:)=[configuredNpatches onset_thr typedecline1 double(fitInfo.success) ...
+                fitInfo.exitflag fitInfo.nActive fitInfo.startAgreement fitInfo.gradientInfNorm ...
+                double(fitInfo.polish.run) double(fitInfo.polish.improved) fitInfo.nLocalRuns ...
+                fitInfo.nConvergedRuns numel(fitInfo.atLowerBound)+numel(fitInfo.atUpperBound) fval]; %#ok<AGROW>
 
-            % ---- Solve dynamics with best params to validate sub-epidemic count -------
-            r_hat = P(1,1);
-            p_hat = P(1,2);
-            a_hat = P(1,3);
-            K_hat = P(1,4);
-            q_hat = P(1,5);
-            alpha_hat = P(1,end-1);
-            d_hat     = P(1,end);
-
-            IC = zeros(npatches,1);
-            IC(1,1) = I0;
-            IC(2:end,1) = 1;
-
-            invasions   = zeros(npatches,1);
-            timeinvasions = zeros(npatches,1);
-            Cinvasions  = zeros(npatches,1);
-
-            invasions(1) = 1;
-            timeinvasions(1) = 0;
-            Cinvasions(1) = 0;
-
-            [~,x] = ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[], ...
-                           r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
+            % A candidate with no converged, valid local minimum is recorded
+            % and left out. It is never replaced by its seed.
+            if ~fitInfo.success
+                rejectedCandidates=rejectedCandidates+1;
+                continue
+            end
+            previousP=P;
 
             % Preserve the existing activated-count reporting/AICc policy,
             % without changing the configured dimension used by later fits.
-            activatedNpatches = min(configuredNpatches,sum(invasions));
+            activatedNpatches = min(configuredNpatches,fitInfo.nActive);
 
             AICc = getAICc(method1,dist1,activatedNpatches,flag1(1),1,fval,length(ydata),onset_fixed);
 
-            RMSES(count1,:) = [activatedNpatches onset_thr typedecline1 AICc];
-            PS(count1,:)    = P;
-            count1 = count1 + 1;
-        end % typedecline1
-    end % onset_thr
+            RMSES(end+1,:) = [activatedNpatches onset_thr typedecline1 AICc]; %#ok<AGROW>
+            PS(end+1,:)    = P; %#ok<AGROW>
+        end % onset_thr
+    end % typedecline1
 end % npatches2
+
+if rejectedCandidates>0
+    warning('SpatialWave:CandidatesRejected', ...
+        ['%d of %d candidate model(s) had no converged, valid fit and were left out. ', ...
+         'fitDiagnostics in the ABC file lists them.'],rejectedCandidates,size(fitDiagnostics,1));
+end
+if isempty(RMSES) && ~isempty(candidatesTooLarge) && isempty(fitDiagnostics)
+    error('SpatialWave:TooFewDataPoints', ...
+        ['No model can be ranked: the series has %d data points and the smallest model has %d parameters. ', ...
+         'AICc needs more data points than parameters plus one.'],length(ydata),min(candidatesTooLarge(:,2)));
+end
+if isempty(RMSES)
+    error('SpatialWave:NoValidCandidates','No candidate model has a converged, valid fit.');
+end
 
 % <=============================================================================================>
 % <======================== Sort the results by AICc (lowest to highest) =======================>
 % <=============================================================================================>
-RMSES = RMSES(1:count1-1,:);
-PS    = PS(1:count1-1,:);
-
-RMSES = full(RMSES);
-PS    = full(PS);
-
 [RMSES,index1] = sortrows(RMSES,[4 1]);
 PS = PS(index1,:);
 
@@ -287,34 +291,22 @@ elseif method1==5
     dist1=5;  factor1=alpha_hat; % VAR=mean+alpha*mean^2;
 end
 
-IC=zeros(npatches,1);
-IC(1,1)=I0;
-IC(2:end,1)=1;
-
-invasions=zeros(npatches,1);
-timeinvasions=zeros(npatches,1);
-Cinvasions=zeros(npatches,1);
-
-invasions(1)=1;
-timeinvasions(1)=0;
-Cinvasions(1)=0;
-
-[~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[], ...
-             r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
+% The search fitted this row with its configured number of sub-epidemics;
+% RMSES holds the number that became active (see spatialWavePatchCap.m).
+patchCap=spatialWavePatchCap(npatches,onset_thr,onset_fixed,npatches_fixed);
+[~,x,totinc,patchIncidence]=simulateSpatialWave(timevect,I0,patchCap,onset_fixed, ...
+             onset_thr,flag1,typedecline1,r_hat,p_hat,a_hat,K_hat,q_hat);
+if ~isempty(weekdayCurve) % revision SW-5: the curve on the scale of the data
+    totinc=totinc(:).*weekdayCurve;
+    patchIncidence=bsxfun(@times,patchIncidence,weekdayCurve);
+end
 
 % <=============================================================================================>
 % <================================= Plot best model fit =======================================>
 % <=============================================================================================>
 figure(100)
 for j=1:npatches
-    incidence1=[x(1,j); diff(x(:,j))];
-    plot(timevect,incidence1); hold on
-end
-y=sum(x,2);
-totinc=[y(1,1); diff(y(:,1))];
-
-if onset_thr>0
-    totinc(1)=totinc(1)-(npatches-1);
+    plot(timevect,patchIncidence(:,j)); hold on
 end
 bestfit=totinc;
 

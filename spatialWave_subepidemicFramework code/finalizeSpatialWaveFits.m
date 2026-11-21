@@ -54,7 +54,7 @@ for rank1=1:N
     fits{rank1}.relativeLikelihood=relativelik_i(rank1);
     PS(rank1,:)=fits{rank1}.parameters;
 end
-finalRanking=struct('schemaVersion',1,'fitRunId',fitRunId, ...
+finalRanking=struct('schemaVersion',2,'fitRunId',fitRunId, ...
     'rankingScope','selected-refitted-models', ...
     'RMSES',RMSES,'PS',PS,'relativelik_i',relativelik_i, ...
     'evidenceRatio',evidenceRatio,'fits',{fits}, ...
@@ -79,6 +79,7 @@ for rank1=1:N
     if isfield(s,'AICmin'), s.AICmin_search=s.AICmin; end
     s.AICmin=RMSES(1,4);
     s.npatches=f.modelSpec(1); s.onset_thr=f.modelSpec(2);
+    s.patchCap=f.patchCap;
     s.typedecline1=f.modelSpec(3); s.d=f.parameters(end);
     s.rank1=rank1; s.topmodelsx=N;
     s.fitResult=f; s.fitRunId=fitRunId;

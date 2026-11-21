@@ -25,6 +25,10 @@ global method1 dist1 factor1 smoothfactor1 calibrationperiod1
 % options.m
 [cumulative1_INP, outbreakx_INP, caddate1_INP, cadregion_INP, caddisease_INP,datatype_INP, DT_INP, datevecfirst1_INP, datevecend1_INP, numstartpoints_INP,topmodelsx_INP, M_INP,flag1_INP,typedecline2_INP]=options
 
+% Revision SW-1: the error structure that goes with the estimation method,
+% as in the fit driver, so the file names below match those of the fit.
+dist1=spatialWaveErrorStructure(method1,dist1);
+
 % <============================================================================>
 % <================================ Dataset ======================================>
 % <============================================================================>
@@ -169,7 +173,18 @@ for rank1=topmodels1
 
     modelIdentity=load(strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'),'fitRunId','fitResult');
     assertSpatialWaveFitIdentity(modelIdentity,rank1,finalRanking);
+    fitSettings=[]; % revision SW-5: read from the fit file below
+    bootstrapDiagnostics=[]; % revision SW-6: likewise
     load (strcat('./output/modifiedLogisticPatch-original-npatchesfixed-',num2str(npatches_fixed),'-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-smoothing-',num2str(smoothfactor1),'-',cadfilename2,'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-calibrationperiod-',num2str(calibrationperiod1),'-rank-',num2str(rank1),'.mat'))
+
+    % Revision SW-5: day-of-week factors of this fit (see plotForecast_SW_subepidemicFramework.m)
+    weekdayCurve=spatialWaveWeekdayCurve(spatialWaveWeekdayFactors(data1(:,2),fitSettings),size(data1,1));
+
+    % Revision SW-6: identifiability report of this ranked model (spatialWaveIdentifiability.m)
+    piiOne=spatialWaveSavedIdentifiability(Phatss,P0,bootstrapDiagnostics);
+    if ~isempty(piiOne)
+        spatialWavePrintPII(piiOne,sprintf('Parameter identifiability (PII) of ranked model %d',rank1));
+    end
 
     rank1
     AICc_rank1=[AICc_rank1;[rank1 AICc_best]];
@@ -238,7 +253,9 @@ for rank1=topmodels1
     line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
-    axis([param_r(1,2)-0.05 param_r(1,3)+0.05 0 120])
+    % fitted value of the ranked model: vertical dashed line (the red line is the 95% CI)
+    fittedR=localFittedLine(P0,1,120);
+    axis([min(param_r(1,2),fittedR)-0.05 max(param_r(1,3),fittedR)+0.05 0 120])
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
@@ -255,7 +272,8 @@ for rank1=topmodels1
     line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
-    axis([param_p(1,2)-0.025 param_p(1,3)+0.025 0 120])
+    fittedP=localFittedLine(P0,2,120);
+    axis([min(param_p(1,2),fittedP)-0.025 max(param_p(1,3),fittedP)+0.025 0 120])
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
@@ -272,7 +290,8 @@ for rank1=topmodels1
     line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
-    axis([param_K0(1,2)-50 param_K0(1,3)+50 0 120])
+    fittedK=localFittedLine(P0,4,120);
+    axis([min(param_K0(1,2),fittedK)-50 max(param_K0(1,3),fittedK)+50 0 120])
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
@@ -288,7 +307,8 @@ for rank1=topmodels1
     line1=plot(line2(:,1),line2(:,2),'r--');
     set(line1,'LineWidth',2)
 
-    axis([max(param_q(1,2)-0.1,0) param_q(1,3)+0.1 0 200])
+    fittedQ=localFittedLine(P0,5,200);
+    axis([max(min(param_q(1,2),fittedQ)-0.1,0) max(param_q(1,3),fittedQ)+0.1 0 200])
 
     set(gca,'FontSize', 16);
     set(gcf,'color','white')
@@ -428,38 +448,30 @@ for rank1=topmodels1
 
         %npatches=Phatss(realization,8);
 
-        IC=zeros(npatches,1);
-
-        IC(1,1)=data1(1,2);
-        IC(2:end,1)=1;
-
-        invasions=zeros(npatches,1);
-        timeinvasions=zeros(npatches,1);
-        Cinvasions=zeros(npatches,1);
-
-        invasions(1)=1;
-        timeinvasions(1)=0;
-        Cinvasions(1)=0;
-
-        [~,x]=ode15s(@modifiedLogisticGrowthPatch,timevect,IC,[],r_hat,p_hat,a_hat,K_hat,npatches,onset_thr,q_hat,flag1,typedecline1);
+        % Revision SW-1: the simulator of the fit, with the number of
+        % sub-epidemics the model was fitted with (fitResult.patchCap).
+        patchCap=modelIdentity.fitResult.patchCap;
+        if isempty(weekdayCurve)
+            I0fit=data1(1,2);
+        else
+            I0fit=data1(1,2)/weekdayCurve(1);
+        end
+        [~,x,totinc,patchIncidence]=simulateSpatialWave(timevect,I0fit,patchCap,onset_fixed, ...
+            onset_thr,flag1,typedecline1,r_hat,p_hat,a_hat,K_hat,q_hat);
+        if ~isempty(weekdayCurve) % the curves on the scale of the data
+            totinc=totinc(:).*weekdayCurve;
+            patchIncidence=bsxfun(@times,patchIncidence,weekdayCurve);
+        end
 
         subplot(2,4,6)
 
-        for j=1:npatches
+        for j=1:min(patchCap,size(color1,1))
 
-            incidence1=[x(1,j);diff(x(:,j))];
-
-            plot(timevect,incidence1,color1(j,:))
+            plot(timevect,patchIncidence(:,j),color1(j,:))
 
             hold on
 
         end
-
-        y=sum(x,2);
-
-        totinc=[y(1,1);diff(y(:,1))];
-
-        totinc(1)=totinc(1)-(npatches-1);
 
         bestfit=totinc;
 
@@ -498,7 +510,11 @@ for rank1=topmodels1
 
     forecastingperiod=0;
     
-    meandoublingtime=zeros(M,1);
+    % Revision SW-1: meandoublingtime starts empty. It used to start as M zeros
+    % and the means were appended after them, so half of the values behind the
+    % mean doubling time and its interval were zeros. Curves that never double
+    % (NaN) are left out.
+    meandoublingtime=[];
 
     doublingtimess=zeros(30,M)+NaN;
 
@@ -532,9 +548,14 @@ for rank1=topmodels1
     seq_doublingtimes % [ith doubling, mean, 95%CI LB, 95%CI UB, prob. i_th doubling]
 
     % Mean doubling times
-    dmean=mean(meandoublingtime);
-    dLB=quantile(meandoublingtime,0.025);
-    dUB=quantile(meandoublingtime,0.975);
+    meandoublingtime=meandoublingtime(~isnan(meandoublingtime));
+    if isempty(meandoublingtime) % no curve doubled
+        dmean=NaN; dLB=NaN; dUB=NaN;
+    else
+        dmean=mean(meandoublingtime);
+        dLB=quantile(meandoublingtime,0.025);
+        dUB=quantile(meandoublingtime,0.975);
+    end
 
     param_doubling=[dmean dLB dUB]
 
@@ -558,7 +579,13 @@ for rank1=topmodels1
 
     for i=1:M
 
-        [Ks,Ktot,n]=getsubepidemicsizesFinite(Phatss(i,4),onset_thr,Phatss(i,5),typedecline1);
+        % Revision SW-1: the wave a forecast of this model can produce, i.e.
+        % at most the fitted sub-epidemics plus those a forecast may add.
+        maxPatches1=modelIdentity.fitResult.patchCap;
+        if onset_fixed==0 && maxPatches1>1 && onset_thr>1
+            maxPatches1=maxPatches1+spatialWaveForecastExtraPatches();
+        end
+        [Ks,Ktot,n]=getsubepidemicsizesFinite(Phatss(i,4),onset_thr,Phatss(i,5),typedecline1,maxPatches1);
 
         numsubepidemics1=[numsubepidemics1;n];
 
@@ -820,3 +847,17 @@ ylabel('Total epidemic wave size')
 
 set(gca,'FontSize', 24);
 set(gcf,'color','white')
+
+% -----------------------------------------------------------------------------
+function value = localFittedLine(P0,column,top)
+% Draw a vertical dashed black line at the fitted value of a parameter (the
+% ranked fit to the observed data, P0) in the current histogram, from 0 to
+% TOP. Returns the value, or NaN when the fit file does not hold it; min and
+% max ignore NaN, so the axis limits are then those of the 95% CI alone.
+value=NaN;
+if isnumeric(P0) && numel(P0)>=column && isfinite(P0(column))
+    value=P0(column);
+    fittedLine=plot(value*[1 1],[0 top],'k--');
+    set(fittedLine,'LineWidth',2)
+end
+% (No closing "end" for the function: the main function of this file has none either.)
