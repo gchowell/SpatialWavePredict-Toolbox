@@ -367,7 +367,7 @@ for k=1:nDates
         quantilesOne=zeros(0,26); % revision SW-8: [model, step, observation, 23 quantiles]
         if quiet
             consoleText=[consoleText evalc('[~,~,~,byHorizon,identifiedOne,quantilesOne]=plotForecast_SW_subepidemicFramework(outbreakx,dateString,forecastingperiod,weight_type1);')];
-            logName=strcat('./output/rolling-log-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',dateString,'.txt');
+            logName=strcat('./output/rolling-log-',spatialWaveOutputTag(nSubepidemics,smoothing,calibrationLength),cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',dateString,'.txt');
             fid=fopen(logName,'w');
             if fid>0
                 fwrite(fid,consoleText);
@@ -459,7 +459,7 @@ if nScored==0
 end
 
 % files, named by the first and the last scored date
-fileTag=strcat('npatchesfixed-',num2str(nSubepidemics),'-onsetfixed-',num2str(onsetFixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(methodFit),'-dist-',num2str(distFit), ...
+fileTag=strcat(spatialWaveOutputTag(nSubepidemics,smoothing,calibrationLength),'onsetfixed-',num2str(onsetFixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(methodFit),'-dist-',num2str(distFit), ...
     '-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion, ...
     '-area-',num2str(outbreakx),'-',datestr(min(scores(:,1)),'mm-dd-yyyy'),'-to-',datestr(max(scores(:,1)),'mm-dd-yyyy'),'.csv');
 dv=datevec(scores(:,1));

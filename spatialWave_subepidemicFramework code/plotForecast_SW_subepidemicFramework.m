@@ -267,7 +267,7 @@ for run_id=-1
             piiRanked{end+1}=piiOne; %#ok<AGROW>
             piiRanks(end+1)=rankx; %#ok<AGROW>
             identifiabilityOut=[identifiabilityOut;[rankx piiOne.nFree piiOne.nIdentified]]; %#ok<AGROW>
-            spatialWaveWritePII(strcat('./output/identifiability-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'),piiRanked,piiRanks);
+            spatialWaveWritePII(strcat('./output/identifiability-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'),piiRanked,piiRanks);
             notNames=piiOne.name(strcmp(piiOne.verdict,'not identified'))';
             if isempty(notNames), notText='none'; else, notText=strjoin(notNames,', '); end
             if isempty(piiOne.tradeoffs), tradeText='none'; else, tradeText=strjoin(piiOne.tradeoffs',', '); end
@@ -447,7 +447,7 @@ for run_id=-1
         combinedQuantilesTable = array2table(combinedQuantiles, 'VariableNames', quantNamesRanked);
         
         % Saving the results 
-         writetable(combinedQuantilesTable,strcat('./output/quantile-ranked(', num2str(rank1),')-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+         writetable(combinedQuantilesTable,strcat('./output/quantile-ranked(', num2str(rank1),')-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
         % compute doubling times
 
@@ -508,7 +508,7 @@ for run_id=-1
         T = array2table(seq_doublingtimes);
         T.Properties.VariableNames(1:5) = {'i_th doubling','db mean','db 95%CI LB','db 95% CI UB','prob. i_th doubling'};
 
-        writetable(T,strcat('./output/doublingTimes-ranked(', num2str(rank1),')-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+        writetable(T,strcat('./output/doublingTimes-ranked(', num2str(rank1),')-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 
         % <==============================================================================================>
@@ -736,7 +736,7 @@ for run_id=-1
 
             T = array2table(forecastdata);
             T.Properties.VariableNames(1:7) = {'year','month','day','data','median','LB','UB'};
-            writetable(T,strcat('./output/ranked(', num2str(rank1),')-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+            writetable(T,strcat('./output/ranked(', num2str(rank1),')-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 
         else
@@ -753,7 +753,7 @@ for run_id=-1
 
             T = array2table(forecastdata);
             T.Properties.VariableNames(1:7) = {'year','month','day','data','median','LB','UB'};
-            writetable(T,strcat('./output/ranked(', num2str(rank1),')-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+            writetable(T,strcat('./output/ranked(', num2str(rank1),')-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
 
         end
@@ -942,7 +942,7 @@ if getperformance
 
     T = array2table(performanceTop);
     T.Properties.VariableNames(1:7) = {'i_th-ranked model','MAE','MSE','Coverage 95%PI','WIS','AICc','RelativeLikelihood'};
-    writetable(T,strcat('./output/performance-forecasting-topRanked-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+    writetable(T,strcat('./output/performance-forecasting-topRanked-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
     % <============================================================================>
     % <=================plot forecasting performance metrics of the ensemble models ==============>
@@ -999,7 +999,7 @@ if getperformance
 
     T = array2table(performanceEns);
     T.Properties.VariableNames(1:5) = {'Ensemble(i) model','MAE','MSE','Coverage 95%PI','WIS'};
-    writetable(T,strcat('./output/performance-forecasting-Ensemble-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+    writetable(T,strcat('./output/performance-forecasting-Ensemble-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
     % <=============================================================================================>
     % <======= Revision SW-3: flat baseline, and the forecast scores of every horizon ================>
@@ -1052,7 +1052,7 @@ if getperformance
 
         T = array2table([scoresByHorizon relativeWIS]);
         T.Properties.VariableNames(1:7) = {'model','horizon','MAE','MSE','Coverage 95%PI','WIS','WIS relative to baseline'};
-        writetable(T,strcat('./output/performance-forecasting-byHorizon-onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
+        writetable(T,strcat('./output/performance-forecasting-byHorizon-',spatialWaveOutputTag(),'onsetfixed-',num2str(onset_fixed),'-typedecline-',num2str(sum(typedecline2)),'-flag1-',num2str(flag1(1)),'-method-',num2str(method1),'-dist-',num2str(dist1),'-horizon-',num2str(forecastingperiod),'-weight_type-',num2str(weight_type1),'-',cadtemporal,'-',caddisease,'-',datatype,'-',cadregion,'-area-',num2str(outbreakx),'-',caddate1,'.csv'))
 
         % fourth output of the function: the table just written
         scoresByHorizonOut=[scoresByHorizon relativeWIS];
