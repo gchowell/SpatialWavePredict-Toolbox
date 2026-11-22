@@ -64,6 +64,10 @@ plotFit_SW_subepidemicFramework(area, origin);
 
 **What this run fits.** The shipped [options.m][options] uses a seven-day moving average, least squares with normal errors, 20 search start points and 300 bootstrap realizations per selected model. Its calibration window is capped at 90 observations. The example snapshot contains 75 daily observations, starting February 27, so all 75 enter calibration. The search allows up to **six** sub-epidemics, considers **both** exponential and power-law size decline, and selects up to four models for refitting. Run the fit even if `output/` contains bundled examples. The current plotting workflow needs the final ranking and its matching rank files.
 
+![Top-ranked model showing bootstrap parameter distributions, fitted case counts, the overlapping sub-epidemics and residuals over time.](docs/images/model_fit.png)
+
+*Fit diagnostics for the top-ranked model.* The upper panels show the bootstrap distributions of the growth coefficient ($r$), growth exponent ($p$), initial carrying capacity ($K$) and decline parameter ($q$). Below, the colored component curves show how successive sub-epidemics overlap. The residuals fluctuate more widely late in the calibration period.
+
 ### 3. Read the forecast
 
 The forecast plot shows predicted incidence, its 95% prediction interval and the later observations. To compare models over the **full 30 days**, display the rows for the requested horizon.
@@ -187,6 +191,10 @@ summary = plotReproductionNumber_SW(52, '05-11-2020', 30);
 ```
 
 The function uses the renewal equation to estimate $R_t$ from the model incidence curve, excluding reporting-day effects. It reads the saved rank files and repeats the calculation over the bootstrap refits. Early estimates are blank until the available incidence history covers the specified fraction of the generation-interval distribution (99% by default). The 95% interval reflects fitted-parameter uncertainty conditional on the selected model and generation interval. The magnitude and timing of a crossing of 1 can depend on the generation interval, especially near a turning point. [Reproduction-number calculation][rt]
+
+![Effective reproduction number across calibration and forecast periods for four ranked models, with bootstrap intervals and a reference line at one.](docs/images/reproductionnumber.png)
+
+*Effective reproduction number for the four ranked models.* The vertical dashed line marks the last calibration observation. To its right, each curve shows the model’s projected $R_t$. The solid red line is the bootstrap median and the dashed red lines give the 95% interval. The horizontal dotted line marks $R_t=1$.
 
 <a id="outputs"></a>
 
