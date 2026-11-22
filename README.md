@@ -1,509 +1,285 @@
 # SpatialWavePredict Toolbox
 
-**Fit epidemic curves, compare sub-epidemic models, and generate short-term ensemble forecasts in MATLAB.**
+SpatialWavePredict is a MATLAB toolbox for fitting epidemic curves and generating short-term forecasts. It represents a reported incidence series as the sum of overlapping sub-epidemics. The timing and size of those components can produce several peaks or a prolonged plateau. Each component is inferred from the aggregate curve. When a dataset contains several regions, the toolbox fits each region separately.
 
-SpatialWavePredict represents an epidemic wave as the aggregate of overlapping sub-epidemics. This structure can describe trajectories that are difficult to capture with a single growth curve, including multiple peaks, prolonged plateaus, and damped oscillations. The toolbox combines parameter estimation, model ranking, parametric bootstrap uncertainty, forecast visualization, and performance evaluation, and adds tools to check its own forecasts: rolling-origin evaluation against a baseline, a parameter identifiability report, and the effective reproduction number.
+The toolbox ranks fitted models by the corrected Akaike information criterion (AICc), generates individual and ensemble forecasts, and scores them against a flat baseline. It also reports practical parameter identifiability and estimates the effective reproduction number from the fitted incidence curve.
 
-[Quick start](#quick-start) · [Input data](#input-data) · [Configuration](#configuration) · [Evaluating forecasts](#evaluating-forecasts-over-many-dates) · [Identifiability](#parameter-identifiability) · [Reproduction number](#effective-reproduction-number) · [Outputs](#outputs) · [Limitations](#interpretation-and-current-limitations) · [Citation](#citation)
+**Revision SW-9** adds the sub-epidemic cap, smoothing span and calibration-window length to result-table filenames. Readers updating scripts that import CSVs can find a worked filename below. [Output files](#output-files) · [Changes for existing users](#changes-for-existing-users) · [Source revision, November 22, 2026][revision]
 
-> **Research software:** validate the numerical results and uncertainty estimates for your dataset and configuration. The [current limitations](#interpretation-and-current-limitations) apply to the implementation, not just to the interpretation of its plots.
+[Quick start](#quick-start) · [Use your own data](#use-your-own-data) · [Model and settings](#model-and-settings) · [Evaluate forecasts](#evaluate-forecasts-across-dates) · [Parameter identifiability](#parameter-identifiability) · [Reproduction number](#effective-reproduction-number) · [Output files](#output-files) · [Citation](#citation)
 
-## Overview
+## Quick start
 
-The workflow fits candidate models, selects and refits top candidates, ranks the accepted refits using the corrected Akaike information criterion (AICc), and generates individual-model and ensemble forecasts. Available components include generalized-logistic and Richards-type growth functions, exponential or power-law decline in successive sub-epidemic sizes, alternative estimation objectives and observation-error distributions, and bootstrap-based summaries.
+The bundled example forecasts daily reported U.S. COVID-19 cases from **May 11, 2020**. It uses column 52 of the calibration file, then scores the forecast against the next 30 daily observations, **May 12 through June 10**.
 
-| Task | Entry point |
-| --- | --- |
-| Fit and rank models for one date | `Run_SW_subepidemicFramework` |
-| Inspect rankings and fits | `plotRankings_SW_subepidemicFramework`, `plotFit_SW_subepidemicFramework` |
-| Forecast and score one date | `plotForecast_SW_subepidemicFramework` |
-| Forecast from many dates and compare with a baseline | `spatialWaveRollingForecast` |
-| Effective reproduction number of the fitted models | `plotReproductionNumber_SW` |
-| Check the installation | `tests/spatialWaveSelfCheck` |
-| Save the example figures of this README | `make_readme_figures` |
+### 1. Open the code directory in MATLAB
 
-**What “spatial wave” means:** sub-epidemics are latent components of an aggregate trajectory. They are not automatically identified geographic locations, transmission chains, or measured subpopulations. A data matrix may contain several regions, but the standard workflow fits one selected column at a time; it does not jointly estimate a spatial transmission network.
-
-For the methodology and illustrated applications, see the [2024 tutorial][tutorial] and the [original framework paper][framework]. Published comparisons apply to the datasets, methods, and forecast horizons evaluated in those studies; they do not establish universal forecasting superiority.
-
-### Default model and parameters
-
-For the generalized-logistic building block (`flag1=1`) with exponential decline in successive sub-epidemic sizes (`typedecline2=[1]`), the cumulative size of an **active** sub-epidemic follows
-
-```math
-\frac{dC_j(t)}{dt} = rC_j(t)^p\left(1-\frac{C_j(t)}{K_j}\right), \qquad K_j = K_0 e^{-q(j-1)}.
-```
-
-| Symbol | Interpretation |
-| --- | --- |
-| $C_j(t)$ | Cumulative size of sub-epidemic $j$ at time $t$. |
-| $r$ | Growth-rate coefficient shared across sub-epidemics. |
-| $p$ | Early-growth scaling exponent; $p=1$ gives approximately exponential early growth when $C_j(t)\ll K_j$. |
-| $K_0$ | Carrying capacity of the first sub-epidemic. |
-| $q$ | Decline parameter across successive sub-epidemics: $q=0$ gives equal carrying capacities, while $q>0$ gives progressively smaller capacities. Later sub-epidemics are never larger than earlier ones. |
-
-With the power-law family (`typedecline2=[2]`) the sizes are $K_j = K_0\, j^{-q}$.
-
-With threshold-triggered onset (`onset_fixed=0`), each subsequent component activates when the preceding component reaches the onset threshold, $C_{\mathrm{thr}}$ (`onset_thr` in the model function). Inactive components do not grow. Activation times are located by the ODE solver's event detection ([`simulateSpatialWave.m`][simulator]), so results do not depend on the spacing of the observation times. See [the implemented model equations][ode] for the activation rule and alternative growth functions.
-
-## Requirements and installation
-
-The fitting and bootstrap workflow uses MATLAB and the following products:
-
-| Product | Functions used by the toolbox |
-| --- | --- |
-| Optimization Toolbox | `fmincon`, `optimoptions` |
-| Global Optimization Toolbox | `MultiStart`, `createOptimProblem`, `CustomStartPointSet` |
-| Statistics and Machine Learning Toolbox | `quantile` and random sampling functions such as `normrnd`, `poissrnd`, `nbinrnd`, and `datasample` |
-| Parallel Computing Toolbox (optional) | Parallel candidate search and bootstrap refits, when `useParallel` is switched on |
-
-See the MathWorks documentation for [constrained optimization][fmincon-doc], [MultiStart][multistart-doc], and [normal random sampling][normrnd-doc]. A tested minimum MATLAB release is not documented; record your environment using `ver`. GNU Octave is not supported: it lacks `MultiStart`, and its ODE solver locates activation events less precisely.
-
-Download the repository using **Code → Download ZIP**, or clone it:
+Download the repository using **Code → Download ZIP**, or clone it in a terminal.
 
 ```bash
 git clone https://github.com/gchowell/SpatialWavePredict-Toolbox.git
 ```
 
-Open the repository root in MATLAB, then run:
+Start MATLAB in the repository root and run the following commands. Keep the code directory as the current folder throughout the analysis. The scripts read `input/` and write `output/` relative to this folder.
 
 ```matlab
-cd('spatialWave_subepidemicFramework code');
-addpath(pwd);
-
-if ~exist('input', 'dir'), mkdir('input'); end
-if ~exist('output', 'dir'), mkdir('output'); end
-
-ver
+cd('spatialWave_subepidemicFramework code')
+addpath(pwd)
+if ~isfolder('output'), mkdir('output'); end
 which options -all
 which plotForecast_SW_subepidemicFramework -all
 ```
 
-**Keep MATLAB's current folder set to `spatialWave_subepidemicFramework code`.** The functions use relative `./input/` and `./output/` paths. The repository also contains a root-level copy of `plotForecast_SW_subepidemicFramework.m`; use the implementation inside the code directory. Avoid adding multiple versions of this project recursively to the MATLAB path.
+The first result of each `which` command should be in the current folder. There is a second forecast script at the repository root, and other toolboxes such as SubEpiPredict also provide an `options.m`.
 
-**Using this toolbox next to SubEpiPredict.** Both toolboxes have an `options.m` and an `options_forecast.m`. MATLAB uses the copy in the current folder first, which is another reason to stay in the code directory. The files that are specific to this toolbox carry `_sw`, `_SW` or `spatialWave` in their names (`options_fit_settings_sw.m`, `options_Rt_sw.m`, `plotReproductionNumber_SW.m`) so that they cannot be mistaken for the SubEpiPredict files of the same purpose.
-
-### Check the installation
-
-```matlab
-addpath(pwd); cd tests; spatialWaveSelfCheck(); cd ..
-```
-
-The self-check takes about a minute and ends with a line such as `spatialWaveSelfCheck: 45 checks passed.` It compares the simulator with closed-form solutions, checks the objectives, the baseline, the identifiability report and the reproduction number against numbers worked out by hand or by an independent reference implementation, and runs one small fit with `MultiStart`. The unit tests in `tests/` can be run with `runtests('tests')`.
-
-## Quick start
-
-This historical example uses the bundled U.S. COVID-19 data and the configuration shown below. It is not a live data feed or a guarantee of exact reproduction of published numerical results.
-
-### 1. Configure the example
-
-Open the two configuration functions:
-
-```matlab
-edit options
-edit options_forecast
-```
-
-In **`options.m`**, replace the corresponding assignments with these values. Retain the existing function declaration, global declarations, and other configuration logic; do not replace the whole file with this excerpt.
-
-```matlab
-% Data and dates
-cumulative1 = 1;
-outbreakx = 52;                 % U.S. aggregate in this example matrix
-caddate1 = '05-11-2020';         % Calibration snapshot / forecast origin
-cadregion = 'USA';
-caddisease = 'coronavirus';
-datatype = 'cases';
-DT = 1;                        % Daily observations
-datevecfirst1 = [2020, 2, 27];
-datevecend1 = [2021, 5, 31];     % Later snapshot used for verification
-
-% Fitting and uncertainty
-smoothfactor1 = 7;
-calibrationperiod1 = 90;
-method1 = 0;                   % Least squares
-dist1 = 0;                     % Normal observation-error draws
-numstartpoints = 20;
-B = 300;
-
-% Candidate models
-npatches_fixed = 3;
-topmodelsx = 4;
-flag1 = 1;                     % Generalized-logistic building block
-onset_fixed = 0;
-typedecline2 = [1];             % Exponential decline
-```
-
-In **`options_forecast.m`**, use:
-
-```matlab
-getperformance = 1;            % Evaluate against later observations
-deletetempfiles = 0;
-forecastingperiod = 30;         % 30 observation intervals: here, 30 days
-weight_type1 = 1;              % Akaike relative-likelihood weights
-```
-
-These settings use two different files already included in `input/`:
-
-```text
-cumulative-daily-coronavirus-cases-USA-05-11-2020.txt
-cumulative-daily-coronavirus-cases-USA-05-31-2021.txt
-```
-
-The first supplies calibration data; the second supplies later observations for forecast evaluation. Keep the fitting settings unchanged between fitting, plotting, and forecasting. Assigning a value only in MATLAB's Command Window is not a substitute for editing the configuration functions, which are called again by the workflow.
-
-For an installation check, `B` can be temporarily reduced, for example to `20`. Such a run checks setup only: it is not sufficient evidence of stable tail quantiles, optimizer convergence, or interval coverage. Restore and assess the computational settings before substantive analysis. The [smoothing caveat](#interpretation-and-current-limitations) also applies to this default-style example.
-
-### 2. Fit, inspect, and forecast
-
-Run these commands from the code directory:
-
-```matlab
-Run_SW_subepidemicFramework(52, '05-11-2020');
-
-plotRankings_SW_subepidemicFramework(52, '05-11-2020');
-plotFit_SW_subepidemicFramework(52, '05-11-2020');
-
-plotForecast_SW_subepidemicFramework(52, '05-11-2020', 30, 1);
-```
-
-The forecast arguments are the selected data column, calibration date, horizon in observation intervals, and ensemble-weighting option. Other settings are read from the configuration functions. The four entry points can also be called without arguments to use their configured defaults.
-
-With `B = 300` and `numstartpoints = 20` the fit of this example took roughly 45 minutes in serial on the machine it was last checked on; a parallel pool (`useParallel`, below) shortens it considerably. Your times will differ. The fit driver and the forecast script reset the random number generator themselves (setting `rngSeed`, default `1`), so repeating a command on the same files gives the same numbers. A call to `rng` before them has no effect unless `rngSeed` is set to empty.
-
-After the bootstrap of each ranked model the fit prints a [parameter identifiability table](#parameter-identifiability). The forecast prints the scores of every ranked model and ensemble next to those of a [flat baseline](#evaluating-forecasts-over-many-dates).
-
-### 3. Inspect the results
-
-Look in `output/` for the fit MAT files, parameter summaries, forecast CSVs and performance tables listed under [Outputs](#outputs). The figures below show what the plotting functions display for this example.
-
-<p align="center">
-  <img src="docs/images/model_fit.png" width="920" alt="Top-ranked model: bootstrap distributions of r, p, K and q, the fit with its bootstrap curves, the sub-epidemic profile, and the residuals">
-</p>
-
-*Top-ranked model of the quick-start example (`plotFit_SW_subepidemicFramework`): bootstrap distributions of the parameters (horizontal red dashed line: 95% interval; vertical black dashed line: the fitted value), the fit to the calibration data with its bootstrap curves, the sub-epidemics that make up the wave, and the residuals. The envelope around the fit is a bootstrap simulation envelope, not a Bayesian credible interval.*
-
-<p align="center">
-  <img src="docs/images/forecasts.png" width="920" alt="30-day forecasts of the four ranked models with 95% prediction intervals and the later observations">
-</p>
-
-*Forecasts of the ranked models (`plotForecast_SW_subepidemicFramework`), with 95% prediction intervals and, because `getperformance = 1`, the observations that came later. The intervals take the model as right; see [limitations](#interpretation-and-current-limitations).*
-
-**Run the fitting step with your current code before plotting.** Current plotting and forecasting functions require a matching `FinalFit-original-*.mat` manifest and its associated rank files. Older bundled results may not contain this information; an old `ABC-original-*.mat` search result is not a replacement. See the [ranking loader][ranking-loader]. Archive earlier output before rerunning an analysis, because files can be overwritten.
-
-## Input data
-
-### Matrix layout
-
-Place a plain numeric, whitespace-delimited `.txt` file in `input/`. Rows represent successive observation intervals; columns represent distinct regions or groups. Do not include a header, dates, region names, or a separate time-index column. Select one column using the one-based integer `outbreakx`.
-
-For example, this illustrates the layout of two incidence series, not a complete fitting example:
-
-```text
-12  4
-18  7
-27  9
-35  14
-43  20
-```
-
-### Filenames and dates
-
-The [runner][runner] constructs the input filename from the options:
-
-```text
-Incidence:  <frequency>-<disease>-<datatype>-<region>-<mm-dd-yyyy>.txt
-Cumulative: cumulative-<frequency>-<disease>-<datatype>-<region>-<mm-dd-yyyy>.txt
-```
-
-`<frequency>` is `daily` for `DT=1`, `weekly` for `DT=7`, or `yearly` for `DT=365`. The remaining fields correspond to `caddisease`, `datatype`, `cadregion`, and `caddate1`. Use two-digit months/days and a four-digit year consistently. Set `datevecfirst1` to the date represented by the first row.
-
-**A filename date does not truncate the matrix.** The calibration file must actually end at the intended forecast origin. For retrospective evaluation, provide a separate later snapshot identified by `datevecend1`, with the same start date, column ordering, and observation frequency. That file must cover the full forecast horizon; it is read by [the verification-data loader][data-loader]. The [rolling forecast](#evaluating-forecasts-over-many-dates) writes the calibration files of earlier dates for you, from the first rows of the later snapshot.
-
-### Data preparation
-
-Use regularly spaced, finite, nonnegative observations. Resolve missing intervals, reporting corrections, and changes in definitions before fitting, and document the handling rather than silently replacing missing values with zeros. Count-likelihood analyses require integer incidence observations.
-
-Set `cumulative1=0` for incidence or `cumulative1=1` for cumulative counts. Cumulative input is converted as `[y(1); diff(y)]`, so the first cumulative value is treated as the first interval's incidence. Account for any pre-existing cumulative baseline when preparing a truncated series; cumulative decreases create negative incidence and require reconciliation.
-
-The runner retains the most recent calibration window and removes leading zeros within that window. Check the resulting start date and usable sample size. All-zero inputs are not supported by the current preprocessing path. For AICc, the actual number of fitted observations must exceed the number of estimated parameters by more than one; eight observations alone do not guarantee an adequate dataset.
-
-## Configuration
-
-Three configuration functions are read by the workflow, and a fourth is optional:
-
-| File | Purpose |
+| MATLAB product | Used for |
 | --- | --- |
-| `options.m` | Data, calibration, estimation method, candidate models. |
-| `options_forecast.m` | Forecast horizon, scoring, ensemble weights. |
-| `options_Rt_sw.m` | Generation interval for the reproduction number. |
-| `options_fit_settings_sw.m` (optional) | Advanced settings of the fit, the reports and the scores. |
+| Optimization Toolbox | Constrained parameter estimation with `fmincon` |
+| Global Optimization Toolbox | Searching from multiple initial guesses with `MultiStart` |
+| Statistics and Machine Learning Toolbox | Sampling for the bootstrap and forecast distributions |
+| Parallel Computing Toolbox (optional) | Parallel candidate fits and bootstrap refits |
 
-### Fitting and model selection: `options.m`
+The shipped settings request a parallel pool. For a serial run, edit the existing [options_fit_settings_sw.m][overrides] and set `U.useParallel = false;`. The full fitting workflow requires MATLAB. To check the installation before running a full fit, run the self-check from the code directory. It checks the simulator, scoring and diagnostics and fits a small example. The full test suite is available via `runtests('tests')`.
 
-| Setting | Meaning |
-| --- | --- |
-| `calibrationperiod1` | Maximum number of recent observations used for fitting, before leading-zero removal. |
-| `smoothfactor1` | Moving-mean span in observations; `1` disables smoothing. |
-| `numstartpoints` | Number of start points of each candidate fit. |
-| `B` | Requested number of parametric bootstrap realizations per selected model. |
-| `npatches_fixed` | Maximum candidate sub-epidemic count during fitting. A forecast may start further sub-epidemics after the calibration period (see below). |
-| `topmodelsx` | Requested number of selected models to refit; limited by available candidates. A one-component setting forces this to one. |
-| `flag1` | Growth-function selector; `1` is generalized logistic, `2` is a generalized Richards-type variant, and `4` is Richards. |
-| `onset_fixed` | `0`: threshold-triggered onset; `1`: simultaneous onset at time zero. See the implementation cautions. |
-| `typedecline2` | `[1]`: exponential size decline; `[2]`: power-law decline; `[1 2]`: search both families. |
+```matlab
+addpath(fullfile(pwd,'tests'))
+spatialWaveSelfCheck();
+```
 
-The implementation also includes generalized-growth (`flag1=0`), classical-logistic (`flag1=3`) and Gompertz (`flag1=5`) branches. The “Linear Model” comment for `flag1=3` in `options.m` does not match the implemented logistic equation. Consult [the model equations][ode] when using additional branches rather than relying on abbreviated labels.
+### 2. Fit, inspect and forecast
 
-**Sub-epidemics in the forecast.** The ranking counts the sub-epidemics that are active within the calibration period. During the forecast a model may start up to 10 further sub-epidemics, sized by the same decline rule, once the calibration period has ended. If a further sub-epidemic starts on the first forecast day in many bootstrap curves, the fit was limited by `npatches_fixed`, and the forecast script gives the warning `SpatialWave:PatchLimitBinding`. Refit with a larger `npatches_fixed` and compare.
+The active configuration already points to the U.S. example. Run the following commands in order. The first command performs the model search and bootstrap. The remaining commands read the saved fit.
 
-### Estimation objective versus observation error
+```matlab
+area = 52;
+origin = '05-11-2020';
+horizon = 30;
+weightType = 1;    % Akaike weights
 
-`method1` selects the fitting objective; `dist1` selects the observation-error distribution used in uncertainty calculations. They are distinct settings and must be consistent with the analysis. For the likelihood methods (`method1` of 1, 3, 4 or 5) the error distribution follows the method, whatever `dist1` says, and the file names record the distribution actually used.
+Run_SW_subepidemicFramework(area, origin);
+plotRankings_SW_subepidemicFramework(area, origin);
+plotFit_SW_subepidemicFramework(area, origin);
+[~, ~, ~, scores] = plotForecast_SW_subepidemicFramework(area, origin, horizon, weightType);
+```
 
-| `method1` | Objective |
-| --- | --- |
-| `0` | Least squares |
-| `1` | Poisson maximum likelihood |
-| `2` | Pearson chi-squared objective |
-| `3` | Negative-binomial likelihood: variance = mean + alpha × mean |
-| `4` | Negative-binomial likelihood: variance = mean + alpha × mean² |
-| `5` | Negative-binomial likelihood: variance = mean + alpha × mean^d |
-| `6` | Sum of absolute deviations / Laplace branch; see limitations before use |
+**What this run fits.** The shipped [options.m][options] uses a seven-day moving average, least squares with normal errors, 20 search start points and 300 bootstrap realizations per selected model. Its calibration window is capped at 90 observations. The example snapshot contains 75 daily observations, starting February 27, so all 75 enter calibration. The search allows up to **six** sub-epidemics, considers **both** exponential and power-law size decline, and selects up to four models for refitting. Run the fit even if `output/` contains bundled examples. The current plotting workflow needs the final ranking and its matching rank files.
 
-For `dist1`, `0` denotes normal errors, `1` Poisson errors, `2` a variance-to-mean negative-binomial formulation, `3`–`5` the corresponding negative-binomial formulations above, and `6` Laplace errors. With `method1` of `0` or `2`, `dist1` must be `0`, `1` or `2`. Listing an option does not imply that every combination has been validated. Count likelihoods are evaluated on the reported counts, not on a moving average of them.
+### 3. Read the forecast
 
-### Forecasting and ensembles: `options_forecast.m`
+The forecast plot shows predicted incidence, its 95% prediction interval and the later observations. To compare models over the **full 30 days**, display the rows for the requested horizon.
 
-`forecastingperiod` counts **observations**, not always days: a value of `4` means four days for daily data or four weeks for weekly data. `getperformance=1` enables evaluation using the later snapshot. `deletetempfiles=0` retains intermediate forecast files.
+```matlab
+names = {'Model','Horizon','MAE','MSE','Coverage95Pct','WIS','RelativeWIS'};
+disp(array2table(scores(scores(:,2) == horizon,:), 'VariableNames', names))
+```
 
-| `weight_type1` | Ensemble weights |
-| --- | --- |
-| `-1` | Equal weights |
-| `1` | Akaike relative-likelihood weights; the default |
-| `0` | Legacy inverse-AICc weights; requires positive AICc and is not standard Akaike weighting |
-| `2` | Inverse weighted interval score (WIS) weights calculated on calibration data; based on in-sample fit, not held-out forecasts |
+Model `0` is the flat baseline, model `1` is the best AICc-ranked refit, and model `102` is the ensemble of the first two ranks. A relative weighted interval score (WIS) below 1 means the model beat the baseline over those 30 observations. MAE and MSE are the mean absolute and mean squared errors.
 
-<p align="center">
-  <img src="docs/images/ensembles.png" width="920" alt="Ensemble(2), Ensemble(3) and Ensemble(4) forecasts with 95% prediction intervals">
-</p>
+**Check your dates and column selection.** The final seven daily increments in the May 11 snapshot total 166,615 cases in column 52. The flat baseline therefore predicts **23,802.14 cases per day**. Against the 30 observations from May 12 through June 10 in the verification file, its MAE is **2,956.69 cases per day**. These two values can be checked directly from the data, independently of the optimizer and bootstrap. To see *when* a ranked forecast missed, compare `data`, `median`, `LB` and `UB` after May 11 in its [dated trajectory file](#output-files).
 
-*Ensemble forecasts of the quick-start example. The shaded envelopes are observation prediction intervals, not Bayesian credible bands.*
+![Four ranked forecasts of U.S. cases. The vertical line marks May 11, gray bands show 95% prediction intervals, and red circles show subsequent observations.](docs/images/ensembles.png)
 
-The [AICc-weight helper][weights] uses the final selected-refit scores. With more than one selected model, the driver constructs ensembles of the top two, top three, and so on, up to the available requested count. When one model's AICc is several units below the others, Akaike weights put almost all weight on it and the ensembles coincide with that model. A prior-forecast-WIS branch exists in the code, but the driver does not provide a complete rolling-origin weighting workflow; do not interpret that branch as validated historical-performance weighting.
+*How to read the panels.* Each panel shows one ranked model. Black circles are calibration observations. To the right of the vertical line, red circles show the subsequent observations and the gray band is the 95% prediction interval. During this example, the fourth-ranked model projected a steeper decline than the first. The forecast function shows ensemble predictions separately in MATLAB figure 500. [More example figures](#example-figures)
 
-### Advanced settings: `options_fit_settings_sw.m`
+For a smaller model search on the same data, set `npatches_fixed = 3;` and `typedecline2 = [1];` in `options.m` before fitting. SW-9 gives the resulting tables a different filename from the six-component run.
 
-This file is optional. Copy `options_fit_settings_sw_example.m` to `options_fit_settings_sw.m` and uncomment the lines you need; every setting you do not mention keeps its default. A misspelled setting name is an error, so it cannot be ignored silently. [`spatialWaveFitSettings.m`][settings] documents every setting.
+<a id="input-data"></a>
 
-| Setting | Default | Effect |
+## Use your own data
+
+1. **Prepare one numeric text matrix.** Put a whitespace-delimited `.txt` file in `input/`, with one observation interval per row and one region or group per column. The loader expects numeric observations only. Keep dates, column labels and other metadata separately. Set `outbreakx` to the one-based index of the column to fit.
+2. **Specify the time axis in `options.m`.** Set `datevecfirst1` to the date of row 1 and `DT` to `1` (daily), `7` (weekly) or `365` (yearly). Set `caddate1` to the date of the last calibration observation, using `mm-dd-yyyy`. The runner reads the entire file, so its **last row** must actually correspond to that date.
+3. **Match the filename to the data type.** Set `caddisease`, `datatype` and `cadregion` to the strings used in the filename. Set `cumulative1` using the table below.
+4. **Set the forecast horizon and verification data.** In [options_forecast.m][forecast-options], `forecastingperiod` counts observation intervals. For example, `4` means four weeks for weekly observations. For retrospective scoring, set `getperformance = 1` and point `datevecend1` in `options.m` to a later snapshot covering the entire horizon, with the same first date, frequency and column order. For a forecast without later observations, use `getperformance = 0` and the default Akaike weights.
+
+| Input | Setting | Filename pattern |
 | --- | --- | --- |
-| `useParallel` | `false` | Run the local solves of the candidate search and the bootstrap refits in a parallel pool. |
-| `rngSeed` | `1` | Seed applied by the fit driver and the forecast script; empty leaves the generator as it is. |
-| `thresholdLowPoints` | `6` | Onset thresholds added below the first step of the regular grid, so that waves whose sub-epidemics start early are among the candidates. `0`: the regular grid alone. |
-| `rLB`, `rUB`, …, `qLB`, `qUB` | `[]` | Replace a search bound. A lower bound equal to its upper bound fixes the parameter. |
-| `weekdayAdjustment` | `false` | Day-of-week factors for daily data (below). |
-| `baselineWindow` | `[]` | Observations the flat baseline averages: 7 for daily data, 1 otherwise. |
-| `notIdentifiedRatio`, `weaklyIdentifiedPII`, `tradeoffCorrelation`, `PIIscale` | `0.5`, `1`, `0.9`, `[]` | Thresholds of the identifiability report. |
-| `modelErrorIntervals` | `false` | In a rolling forecast, also score intervals widened by earlier forecast errors. |
+| New counts per interval | `cumulative1 = 0` | `<frequency>-<disease>-<datatype>-<region>-<mm-dd-yyyy>.txt` |
+| Cumulative counts | `cumulative1 = 1` | `cumulative-<frequency>-<disease>-<datatype>-<region>-<mm-dd-yyyy>.txt` |
 
-Settings that change what a fit computes are saved with the fit. The rolling forecast compares them before it uses a saved fit again. Settings of reports and scores (the last three rows and `baselineWindow`) never make a saved fit out of date.
+For the quick start, the two files are `cumulative-daily-coronavirus-cases-USA-05-11-2020.txt` (calibration) and `cumulative-daily-coronavirus-cases-USA-05-31-2021.txt` (verification). To adapt the workflow, edit the assignments in the active configuration functions. Each entry point reads those files again.
 
-**Day-of-week adjustment.** With `weekdayAdjustment = true`, seven factors are estimated from the calibration data before the fit (each observation divided by the mean of the seven days centred on it; the factor of a weekday is the median of its ratios). The model curve is multiplied by them in the fit, the bootstrap and the forecast; the data are not changed. It requires daily data, `smoothfactor1 = 1`, and at least 21 calibration days. The factors are not counted as parameters, so the AICc of a fit with the adjustment must not be compared with that of a fit without it. Because the residuals become smaller, least-squares prediction intervals become narrower.
+**Check the incidence that will be fitted.** Cumulative input `y` becomes `[y(1); diff(y)]`. A cumulative series that starts mid-outbreak can therefore contribute its entire pre-existing total as the first observation. Supply interval counts when that baseline can be separated. Reconcile downward reporting corrections and missing intervals before fitting. Count likelihoods describe nonnegative integer counts. The raw-count path rejects negative values and warns about fractional observations.
 
-## Evaluating forecasts over many dates
+The runner requires at least one positive observation in the selected window. It retains the most recent `calibrationperiod1` observations and drops leading zeros in that window. It skips series with fewer than eight remaining observations. A candidate also needs more than $k+1$ observations for a finite AICc, where $k$ is its parameter count.
 
-One forecast from one date says little about a method. `spatialWaveRollingForecast` repeats the fit and the scored forecast from a list of dates and summarizes the scores by horizon, next to a baseline that uses no model.
+<a id="configuration"></a>
 
-```matlab
-dates = cellstr(datestr(datenum(2020,4,27):14:datenum(2020,7,6), 'mm-dd-yyyy'));
-R = spatialWaveRollingForecast(dates, [], [], [], 'quiet', true);
+## Model and settings
+
+With the generalized-logistic growth function (`flag1 = 1`), the cumulative size $C_j$ of active sub-epidemic $j$ follows
+
+```math
+\frac{dC_j}{dt}=r C_j^p\left(1-\frac{C_j}{K_j}\right).
 ```
 
-- **Data.** The data of every date come from the file of the most recent date (`datevecend1`). A date without its own file in `input/` gets one, written from the first rows of that file. These are the counts as known today, not as known on that date.
-- **Saved fits are used again.** A date whose fit is in `output/`, made with the same `B`, `numstartpoints`, `topmodelsx` and fit settings, is not fitted again, so an interrupted run continues with the same command. Before a date is fitted again, its earlier fit files are copied to `output/replaced-by-rolling/`. A saved fit is recognized by its settings, not by its data: after correcting data, give `'refit', true`.
-- **`'quiet', true`** sends the text of each fit and forecast to a log file per date.
-- `getperformance` must be `1`.
+The components share the growth coefficient $r$ and early-growth exponent $p$. The first component has carrying capacity $K_0$. Later capacities follow $K_j=K_0\exp[-q(j-1)]$ (exponential) or $K_j=K_0 j^{-q}$ (power law). At $q=0$ their capacities are equal. With threshold-triggered onset, the next component begins growing when its predecessor reaches the fitted onset threshold. A model can therefore produce a higher aggregate peak when components overlap even if each successive component has a smaller capacity. [Model equations][ode] · [Simulation and activation][simulator]
 
-**The baseline** repeats the mean of the last observations (7 for daily data). Its prediction intervals come from the errors the same rule made earlier in the calibration data. It is scored by the functions that score the models. A model is worth using at a horizon when its WIS there is below the baseline's.
-
-**What is reported.** Scores “over h” are averages over the first h observations of a forecast; scores “at step h” are those of observation h alone. For the WIS, three comparisons with the baseline are printed; values below 1 favour the model.
-
-| Comparison | Meaning |
+| Active file | Settings to change |
 | --- | --- |
-| Ratio of means | Mean WIS of the model divided by the mean WIS of the baseline. Dates with large counts weigh more. |
-| Typical ratio | Geometric mean over the dates of the ratio. Every date weighs the same. |
-| Share better | Share of dates on which the model's WIS is below the baseline's. |
+| [options.m][options] | Dataset and dates, smoothing, calibration window, growth model, decline family, estimation method, search start points, bootstrap size and number of ranked models |
+| [options_forecast.m][forecast-options] | Horizon, ensemble weights, scoring and retention of intermediate forecast files |
+| [options_fit_settings_sw.m][overrides] | Overrides for fitting and reporting. This file ships with `useParallel = true`, `weekdayAdjustment = false` and `modelErrorIntervals = true`. Inspect the effective settings with `spatialWaveFitSettings()`. |
+| [options_Rt_sw.m][rt-options] | Generation-interval distribution, mean, variance and minimum coverage for the reproduction-number calculation |
 
-A date-by-date table follows, because averages can hide that a model does well on some dates and badly on others. Model codes in the tables: `0` is the baseline, `k` is ranked model k, `100+k` is Ensemble(k).
+**Candidate models.** Choose one growth function with `flag1` — `0` generalized growth, `1` generalized logistic, `2` generalized Richards, `3` logistic, `4` Richards or `5` Gompertz. Generalized growth has no carrying-capacity term. Set `onset_fixed = 0` for threshold-triggered onset or `1` for simultaneous onset. Use `typedecline2 = [1]`, `[2]` or `[1 2]` for exponential decline, power-law decline or both. The number of components active during calibration can be smaller than `npatches_fixed`. Eligible wave models can activate up to ten additional components in the forecast.
 
-Forecasts from nearby dates overlap and are not independent. With fewer than 10 dates the function says so. If all dates fall on the same weekday, single-step scores mix the horizon with the day of the week.
+**Fitting and observation error.** `method1` selects the objective. `dist1` controls how observation-level variation is simulated. The toolbox resolves permitted combinations before fitting. [Error-structure rules][errors]
 
-### Intervals that allow for model error (optional)
+| `method1` | Objective | Effective `dist1` |
+| --- | --- | --- |
+| `0` or `2` | Least squares or Pearson chi-squared, respectively | Choose `0` normal, `1` Poisson or `2` negative binomial with an empirical variance-to-mean factor |
+| `1` | Poisson likelihood | `1` |
+| `3`, `4` or `5` | Negative-binomial likelihood with variance $\mu+\alpha\mu$, $\mu+\alpha\mu^2$ or $\mu+\alpha\mu^d$, respectively | Matches `method1` |
+| `6` | Absolute deviations with Laplace errors | `6` |
 
-The prediction intervals come from the bootstrap refits and the error structure, and both take the model as right. With `modelErrorIntervals = true` the rolling forecast also reports intervals widened by each model's own earlier forecast errors: for a forecast from date D at step h, the errors of earlier forecasts of the same model near step h, measured against their own 95% intervals, give a widening factor (their 95% quantile, never below 1). Only observations already known on date D are used.
+With the shipped settings, Poisson and negative-binomial objectives use raw counts. Least squares uses a moving average when `smoothfactor1 > 1`. Smoothing reduces day-to-day residual variation and can produce narrow prediction intervals when evaluated against reported counts. For an unsmoothed fit, set `smoothfactor1 = 1`. Optional weekday adjustment for daily data estimates reporting factors from the calibration window. It needs at least 21 observations and sufficient data for each weekday. Keep smoothing off when using it, and compare its performance on held-out observations. The AICc calculation omits the weekday factors from its parameter count. [Fitted-series rules][fit-series] · [Advanced settings][settings]
 
-The median forecast is not moved, so MAE is unchanged; coverage and WIS change. A step with fewer than 10 earlier errors is scored as forecast, so the first dates of a run are not affected, and the method responds to a failure only after it has been observed. Switching the setting on or off repeats no fit.
+**Rankings and ensembles.** The runner screens candidates, refits the selected models, then recomputes AICc for each accepted refit. The resulting rank 1 has the lowest AICc among those refits. Ensemble($k$) combines the first $k$ ranks. The shipped `weight_type1 = 1` uses normalized Akaike weights proportional to $\exp[-(\mathrm{AICc}_i-\mathrm{AICc}_{\min})/2]$. Other choices are `-1` (equal weights), `0` (legacy inverse AICc, requiring positive scores) and `2` (inverse calibration WIS). The last choice requires scoring to be enabled and uses in-sample scores. The ensemble plotting routine has three panels for ensemble sizes two through four. Evaluate forecast skill at later dates. [Weight calculation][weights]
+
+<a id="evaluating-forecasts-over-many-dates"></a>
+
+## Evaluate forecasts across dates
+
+A rolling-origin evaluation repeats the fit and forecast at several historical cutoffs. For example, these three bundled snapshots give forecasts two weeks apart, each scored against the following 30 days. In `options_forecast.m`, set `getperformance = 1`.
+
+```matlab
+origins = {'04-27-2020','05-11-2020','05-25-2020'};
+R = spatialWaveRollingForecast(origins, 30, 52, 1, 'quiet', true);
+disp(R.status)      % Column labels in R.statusColumns
+disp(R.summary)     % Column labels in R.summaryColumns
+```
+
+The baseline predicts the recent mean at every horizon (last seven observations for daily data, last observation for weekly or yearly data). Its intervals use historical errors of the same rule within the calibration series. Scores **over $h$** average the first $h$ forecast steps. The rolling summary also reports WIS and coverage **at step $h$** across origins. For example, a forecast may be accurate in week one and miss a turn in week two. The score over 14 days will average those periods together.
+
+| Rolling WIS comparison | Interpretation |
+| --- | --- |
+| Ratio of means | Mean model WIS divided by mean baseline WIS on paired origins. Below 1 favors the model. |
+| Typical ratio | Geometric mean of the origin-specific ratios for positive scores. Below 1 favors the model. |
+| Share better | Fraction of paired origins won by the model, counting ties as one-half. Above 0.5 favors the model. |
+
+Inspect `R.byDate` for differences across origins and `R.status` and `R.notes` for skipped dates or warnings. Overlapping horizons share target observations, so the three example dates illustrate the workflow and give limited evidence about comparative skill.
+
+**Data vintages and saved fits.** The rolling driver uses an existing, correctly sized snapshot for each origin. If one is missing, it writes the prefix of the later verification file to `input/`. Such a reconstruction can include revisions made after the origin. Use archived snapshots to evaluate forecasts with counts available at the time. The driver checks fit settings and the fitting revision when reusing a result. After correcting data, update the affected origin files and pass `'refit', true` to rebuild those fits. [Rolling forecast driver][rolling]
+
+**Intervals adjusted for earlier forecast errors.** The shipped override enables `modelErrorIntervals` for rolling evaluation. Alongside the original scores, `R.adjustedScores` and `R.adjustedSummary` show the effect of widening model intervals using past forecast errors whose target dates have already passed by the new origin. The adjustment preserves the median. With fewer than ten eligible errors at the default settings, it reports a scale factor of one. Compare coverage and WIS together because an interval can gain coverage simply by becoming wider. [Interval adjustment][model-error]
 
 ## Parameter identifiability
 
-After the bootstrap of each ranked model, and again in `plotFit_SW_subepidemicFramework` and `plotForecast_SW_subepidemicFramework`, the toolbox reports how well the data determine each parameter. It follows the identifiability report of the SubEpiPredict toolbox.
+Each ranked fit reports how precisely its continuous parameters are estimated within the chosen model and search bounds. The forecast function exports one row per parameter and rank in `identifiability-*.csv`. The bootstrap holds the selected onset threshold and decline family fixed across refits.
 
-| Column | Meaning |
+| Read this field | What it tells you |
 | --- | --- |
-| estimate, CI LB, CI UB | The ranked fit and the 95% bootstrap interval. |
-| PII | log10(CI UB / CI LB): the width of the interval in decades; 1 is a factor of 10. Undefined when CI LB is 0 or below. |
-| range | Share of the search range the interval covers. |
-| scale | Headline measure: the PII where the lower search bound is positive (r, K, alpha, d), the range share where it is 0 (p, q, a). |
-| ratio | PII divided by the largest PII the bounds allow, or the range share. Near 1, the interval is the search range. |
-| atLB, atUB | Share of refits at each bound. |
-| MCSE | Monte Carlo error of the PII; smaller differences between two PII values are noise. |
-| verdict | `identified`, `weakly identified`, `at a bound`, `not identified`, or `fixed`. |
+| `CI_LB`, `CI_UB`, `PII` | The 95% bootstrap interval and its log-width, $\log_{10}(\mathrm{CI}_{UB}/\mathrm{CI}_{LB})$. A PII of 1 means a tenfold span. The log-width is defined for a positive lower interval limit. |
+| `PII_rangeFrac`, `PII_ratio` | How much of the allowed search range the interval occupies. The default headline scale uses log-width for a positive lower search bound and range fraction for a zero lower bound. |
+| `fracLB`, `fracUB`, `MCSE_PII` | Fractions of refits near each search bound and Monte Carlo standard error of the log-width. |
+| `verdict`, `most_correlated_with`, `rank_correlation` | The practical-identifiability classification and the strongest pairwise association across refits. The printed report flags trade-offs at absolute rank correlation of at least 0.9 by default. |
 
-Below the table the report lists **pairs of parameters that trade off** against each other: those whose rank correlation over the refits is 0.9 or more in size. In this model `r` with `p`, and `K` with `q`, can make up for each other, so each may have a wide interval although a combination of them is well determined. Read the verdicts together with this line: a parameter can be labelled identified on its own while it is not determined separately from its partner.
-
-The forecast script writes `identifiability-*.csv` for all ranked models. The report is computed from the refits and search bounds saved with a fit, so changing its thresholds repeats no fit.
-
-“Identified” is relative to the search bounds and to the bootstrap, which resamples around the fitted curve. It does not say that the model is right: a model can be tightly identified and forecast badly.
+For example, a strong $r$–$p$ trade-off means that different growth coefficients and exponents produced similar fitted curves. Read each interval alongside the correlations and the number of unresolved bootstrap refits. The code can retain a valid optimizer endpoint from an unresolved refit, marked in `bootstrapDiagnostics.usedFallback`. These diagnostics describe practical identifiability under the selected data, bounds and bootstrap assumptions. Structural identifiability requires a separate analysis. [Identifiability calculations][pii]
 
 ## Effective reproduction number
 
-```matlab
-edit options_Rt_sw      % set the generation interval for your pathogen
-summary = plotReproductionNumber_SW([], '05-11-2020', 30);
-```
-
-`plotReproductionNumber_SW` reads a saved fit and computes, for every ranked model, the effective reproduction number over the calibration period and the forecast, with a 95% interval from the bootstrap refits. No fit is repeated.
-
-- **Method.** The renewal equation, R(t) = I(t) / Σ I(t−s) w(s), where w is the generation-interval distribution (gamma, exponential, or a fixed interval).
-- **From the model curve, not the data,** and without the day-of-week factors if the fit used them: a reporting cycle is not a transmission cycle.
-- **Early values are blank** until the curve covers 99% of the generation interval. Before that, the equation misses infectors from before the first observation and overstates R.
-- **Set the generation interval.** `options_Rt_sw.m` ships with placeholder values, in the time unit of the data (days for daily data, weeks for weekly data). The values of R depend directly on them; only whether R is above or below 1 does not.
-
-<p align="center">
-  <img src="docs/images/reproductionnumber.png" width="920" alt="Effective reproduction number of the ranked models over the calibration and forecast periods: median, 95% interval, and the value of the ranked fit">
-</p>
-
-*Effective reproduction number of the ranked models: median over the bootstrap refits (solid red), 95% interval (dashed red) and the ranked fit (black); the vertical dashed line marks the end of the calibration period. The values depend on the generation interval in `options_Rt_sw.m`.*
-
-R inherits the limits of the fit. Its interval reflects parameter uncertainty given the model, and beyond the calibration period it is only as good as the forecast. Because each new sub-epidemic bends the curve upward, R can rise above 1 repeatedly within one wave.
-
-## Outputs
-
-Results are written to `output/`. Exact filenames encode many, but not all, analysis settings.
-
-| File or pattern | Contents |
-| --- | --- |
-| `ABC-original-*.mat` | Candidate-search results; not the authoritative final refit ranking. |
-| `FinalFit-original-*.mat` | Final ranking manifest for selected, accepted refits and their identities. |
-| `modifiedLogisticPatch-original-*-rank-*.mat` | Rank-specific fitted parameters, trajectories, bootstrap results, fit settings and identifiability report. |
-| `Forecast-*.mat` | Intermediate model trajectories and observation-scale forecast draws. |
-| `AICc-topRanked-*.csv`, `parameters-topRanked-*.csv` | Ranking and parameter summaries. |
-| `ranked(...)-*.csv`, `Ensemble(...)-*.csv` | Dated trajectories with observations, median, and lower/upper interval bounds. |
-| `quantile-*.csv` | Predictive quantile tables. |
-| `performance-*.csv` | Calibration or forecast performance summaries. |
-| `performance-forecasting-byHorizon-*.csv` | Scores of every model, ensemble and the baseline at every horizon. |
-| `identifiability-*.csv` | Identifiability report of all ranked models. |
-| `doublingTimes-*.csv` | Derived doubling-time summaries. |
-| `rolling-forecast-scores-*.csv`, `rolling-forecast-summary-*.csv` | Scores of every date, model and horizon of a rolling forecast, and their summary. |
-| `rolling-forecast-scores-modelerror-*.csv` | The same scores for intervals widened by earlier forecast errors. |
-| `rolling-log-*.txt` | Text of the fit and forecast of one date (`'quiet', true`). |
-| `Rt-ranked(...)-*.csv`, `Rt-summary-*.csv` | Reproduction number over time, and at the end of the calibration and forecast periods. |
-| `replaced-by-rolling/` | Fit files that a rolling forecast replaced. |
-
-<details>
-<summary>More example figures: rankings, parameters and performance</summary>
-
-![AICc, relative likelihood and evidence ratio of the ranked models](docs/images/relativelikelihood.png)
-
-![The ranked models with their sub-epidemic profiles](docs/images/rankings.png)
-
-![Parameter estimates across the ranked models](docs/images/parameters.png)
-
-![Calibration performance of the ranked models](docs/images/performance_calibration.png)
-
-![Forecast performance of the ranked models](docs/images/performance_forecast.png)
-
-![Forecast performance of the ensembles](docs/images/performance_ensemble.png)
-
-These figures illustrate the available displays for the quick-start example; they are not regression-test results for the current source revision.
-
-</details>
-
-**Regenerating the figures.** All figures in this README are saved by one command from a fit that is already in `output/`; nothing is fitted again:
+Set the generation interval in [options_Rt_sw.m][rt-options] before interpreting $R_t$. Choose gamma, exponential or fixed and express the mean in observation intervals (days for daily data, weeks for weekly data). The gamma option takes a **variance** in squared observation intervals. The supplied values are illustrative.
 
 ```matlab
-make_readme_figures(52, '05-11-2020', 30, 1);   % writes PNG files to ../docs/images
+edit options_Rt_sw
+summary = plotReproductionNumber_SW(52, '05-11-2020', 30);
 ```
 
-The dated trajectory tables use `year`, `month`, `day`, `data`, `median`, `LB`, and `UB`. They can contain both calibration and forecast rows; distinguish these using the forecast origin. Quantile tables must be aligned to the calibration length and target dates rather than assumed to contain forecast-only rows.
+The function uses the renewal equation to estimate $R_t$ from the model incidence curve, excluding reporting-day effects. It reads the saved rank files and repeats the calculation over the bootstrap refits. Early estimates are blank until the available incidence history covers the specified fraction of the generation-interval distribution (99% by default). The 95% interval reflects fitted-parameter uncertainty conditional on the selected model and generation interval. The magnitude and timing of a crossing of 1 can depend on the generation interval, especially near a turning point. [Reproduction-number calculation][rt]
 
-Performance routines calculate point-error and interval-based measures, including mean absolute error (MAE), mean squared error (MSE), prediction-interval coverage, and weighted interval score (WIS). Horizon-indexed results summarize **the first h forecast observations together**, rather than the single observation at horizon h; check [the scoring routine][metrics] before combining results across origins. Assess interval coverage together with interval width and score, not coverage alone.
+<a id="outputs"></a>
 
-## Interpretation and current limitations
+## Output files
 
-- **The model describes damped wave trains.** Each sub-epidemic is at most as large as the one before. A new wave that outgrows the earlier one cannot be represented, and before a wave has turned its final size is not in the data. Expect the forecasts to do best after a turn and to fall behind a flat baseline when a new wave begins. The rolling forecast shows which situation your dates are in.
-- **Prediction intervals assume the model is right.** They combine parameter uncertainty from the bootstrap with the observation-error distribution. When the model is wrong, coverage can be far below nominal with nothing flagged. The optional model-error intervals address this only after a failure has been observed.
-- **AICc ranks fit, not forecast skill.** The top-ranked model is not always the best forecaster, and models with many early-starting sub-epidemics can rank first while forecasting worst. Compare ranked models in a rolling forecast before relying on rank 1 or on Akaike-weighted ensembles.
-- **Smoothing.** With `smoothfactor1` above 1 and least squares, the model is fitted to a moving average, while forecasts are scored against the reported counts. Residuals of a smoothed series understate the day-to-day variation of the counts, which narrows least-squares intervals.
-- **Parameters trade off.** `r` with `p`, and `K` with `q`, are often not determined separately. Do not interpret single estimates without the identifiability report.
-- **Warnings worth acting on.** `SpatialWave:PatchLimitBinding` (the fit was limited by `npatches_fixed`), `SpatialWave:BootstrapAtBound` (refits pile up at a search bound), `SpatialWave:SameCurveModels` (ranked models are the same curve, so ranking and ensembles have nothing to choose between), `SpatialWave:NotIdentified`.
-- **Retrospective evaluation uses today's data.** Calibration files cut from a later snapshot include later corrections of the counts, which favours every forecast a little.
-- **Not every combination of options has been validated.** The Laplace branch (`method1 = 6`), simultaneous onset (`onset_fixed = 1`) and the less-used growth functions have had less testing than the default configuration.
+The toolbox writes to `output/`. SW-9 result tables and rolling logs now include the number of sub-epidemics allowed during fitting, the smoothing span and the requested calibration-window length. For the shipped example the tag is `npatchesfixed-6-smoothing-7-calibrationperiod-90-`. The `90` records the configured window even though only 75 observations were available. In the rest of the filename, `typedecline-3` denotes a search over both decline families because the writer records the sum of `[1 2]`. [Filename construction][output-tag]
 
-## Reproducibility and troubleshooting
+For example, after the quick start the first-ranked trajectory can be read as follows.
 
-Record the code revision, MATLAB/toolbox versions, all configuration files (including `options_fit_settings_sw.m` and `options_Rt_sw.m` if used), raw data snapshots, preprocessing decisions, and the seed setting. Each fit file stores the fit settings and the random-generator state it started from. Keep complete output from each run together; do not mix rank files and manifests from different runs. A fixed seed controls random draws within a given workflow but does not guarantee identical results across releases or changed execution paths.
+```matlab
+tag = spatialWaveOutputTag(6, 7, 90);
+suffix = 'onsetfixed-0-typedecline-3-flag1-1-method-0-dist-0-horizon-30-daily-coronavirus-cases-USA-area-52-05-11-2020.csv';
+trajectory = readtable(fullfile('output', ['ranked(1)-' tag suffix]));
+disp(trajectory(76:78, {'year','month','day','data','median','LB','UB'}))
+```
 
-| Symptom | Check |
+Rows 76–78 are the first three forecast days in this example. To check another configuration, call `options();` followed by `spatialWaveOutputTag()` to see its tag. Bootstrap size, the random seed and the input-data version can still change results under the same filename. Archive the complete output directory when comparing runs that differ on those settings.
+
+| To find… | Open in `output/` |
 | --- | --- |
-| Input file cannot be found | Current folder, filename fields, cumulative prefix, and four-digit year. |
-| `MultiStart`, `fmincon`, or a sampling function is unavailable | Installed/licensed MATLAB products and path resolution. |
-| Too many outputs from `options_forecast`, or settings that do not take effect | `which options -all`: another toolbox's `options.m` may be ahead on the path. Stay in the code directory and use the forecast implementation there, not the duplicate at the repository root. |
-| `SpatialWave:FinalFitResultsRequired` or fit-identity mismatch | Rerun fitting for the exact settings and regenerate all downstream results together. |
-| `SpatialWave:RtFitNotFound` | No fit for the settings in `options.m` and that date: check `npatches_fixed`, `typedecline2`, `smoothfactor1`, `method1` and `calibrationperiod1`, which are part of the file name. |
-| A rolling forecast fits a date again unexpectedly | The printed `Fit:` line names the setting that differs from the saved fit. |
-| `SpatialWave:WeekdayWithSmoothing` | Set `smoothfactor1 = 1` or `weekdayAdjustment = false`. |
-| Forecast horizon cannot be evaluated | Later snapshot coverage, `datevecfirst1`, `datevecend1`, selected column, and sampling frequency. |
-| Invalid fits, nonfinite values, or too few observations | Missing/negative data, effective calibration length, model complexity, likelihood choice, and optimizer diagnostics. |
-| Unsure whether the installation works | Run `tests/spatialWaveSelfCheck`. |
+| Final ranking and matching fit files for plotting | `FinalFit-original-*.mat` and `modifiedLogisticPatch-original-*-rank-*.mat`. The `ABC-original-*.mat` file contains the earlier candidate search. |
+| AICc, parameters and calibration performance | `AICc-topRanked-*.csv`, `parameters-topRanked-*.csv`, `performance-calibration-*.csv` |
+| Dated forecasts and 95% prediction intervals | `ranked(k)-*.csv` and `Ensemble(k)-*.csv` for the chosen rank or ensemble size. These include calibration and forecast rows. With scoring off, ensemble trajectory CSVs omit the year column. |
+| Predictive distributions and doubling times | `quantile-*.csv`, `doublingTimes-*.csv`. Quantile CSVs contain 23 predictive quantiles from 0.01 to 0.99. Calibration rows come first. In the quick start, forecast rows are 76–105. `Forecast-*.mat` retains intermediate draws when `deletetempfiles = 0`. |
+| Scores against later observations | `performance-forecasting-byHorizon-*.csv` for baseline, ranked models and ensembles. The top-ranked and ensemble performance CSVs summarize the full horizon. |
+| Performance across origins | `rolling-forecast-scores-*.csv`, `rolling-forecast-summary-*.csv`, and `rolling-forecast-scores-modelerror-*.csv` for adjusted scores when enabled. The rolling driver returns the actual paths as `R.scoresFile` and `R.summaryFile` for scored runs. With `'quiet', true`, see `rolling-log-*.txt` for each run. |
+| Parameter uncertainty and effective reproduction number | `identifiability-*.csv`, `Rt-ranked(k)-*.csv` and `Rt-summary-*.csv` |
 
-For bug reports, open a [GitHub issue][issues] with the code revision, `ver` output, relevant settings, exact command, and complete error message. Include a small shareable or synthetic dataset that reproduces the issue; do not upload confidential records.
+### Changes for existing users
 
-## Tutorials and citation
+- **CSV imports.** Earlier output tables keep their old names. A broad pattern such as `ranked(1)-*.csv` can now match multiple settings and older files for the same origin. Use the new tag plus the dataset, origin and horizon when selecting a table. The existing MAT-file naming scheme and the fitting revision (`SW-2`) carry forward. A compatible saved fit can be used to regenerate tables by rerunning the corresponding plot or forecast command. [Output tag][output-tag] · [Fit revision][fit-revision]
+- **Option presets.** In this checkout the historical preset scripts are in the code directory. Running `cleanup_leftover_files()` there previews the files the utility would move. To apply the displayed moves, run `cleanup_leftover_files(true)`, followed by `rehash; clear functions`. The utility moves preset files to `option_presets/` and designated obsolete files and editor autosaves to `removed_files/`. This housekeeping step is optional. To use a historical preset, copy the relevant assignments into the active options file and keep its function signature. In particular, `options_mpox.m`, `options_mpx2.m` and `optionsx.m` have an older output layout. [Cleanup utility][cleanup] · [Preset guide][presets]
+- **Quantile helper.** The function declaration in `computeQuantiles.m` now matches its filename. For scripts that already have observation-scale draws, `[Qcal,Qforecast,levels] = computeQuantiles(data1,curvesforecasts2,horizon)` returns separate calibration and forecast matrices plus their quantile levels. Rows of the draws matrix run in time order, with one column per simulated trajectory. [Quantile helper][quantiles]
 
-The [tutorial paper][tutorial] provides the methodological background and illustrated examples. A [video walkthrough][video] is also available. Older materials may use different function names or output formats, and predate the rolling forecast, the identifiability report and the reproduction-number module; follow the commands in this README for this repository layout.
+### Example figures
 
-### Citation
+[Ranked fits](docs/images/rankings.png) · [Relative likelihood](docs/images/relativelikelihood.png) · [Fit and residuals](docs/images/model_fit.png) · [Parameters](docs/images/parameters.png) · [Sub-epidemic projections](docs/images/forecasts.png) · [Effective reproduction number](docs/images/reproductionnumber.png) · [Calibration performance](docs/images/performance_calibration.png) · [Ranked forecast performance](docs/images/performance_forecast.png) · [Ensemble performance](docs/images/performance_ensemble.png)
 
-When using the toolbox, cite the tutorial and the methodological papers relevant to your analysis, and report the code revision used.
+After fitting, the following command exports figures from that run to a separate directory. The fifth argument sets the destination. Omitting it writes to `../docs/images/`.
 
-**Toolbox tutorial**  
-Chowell G, Tariq A, Dahal S, Bleichrodt A, Luo R, Hyman JM. SpatialWavePredict: a tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework. *BMC Medical Research Methodology*. 2024;24:131. [doi:10.1186/s12874-024-02241-2][tutorial]
+```matlab
+make_readme_figures(52, '05-11-2020', 30, 1, fullfile('output','figures'));
+```
 
-**Original framework**  
-Chowell G, Tariq A, Hyman JM. A novel sub-epidemic modeling framework for short-term forecasting epidemic waves. *BMC Medicine*. 2019;17:164. [doi:10.1186/s12916-019-1406-6][framework]
+<a id="reproducibility-and-troubleshooting"></a>
 
-**COVID-19 forecasting application**  
-Chowell G, Rothenberg R, Roosa K, Tariq A, Hyman JM, Luo R. Sub-epidemic Model Forecasts During the First Wave of the COVID-19 Pandemic in the USA and European Hotspots. In: *Mathematics of Public Health*. 2022:85–137. [doi:10.1007/978-3-030-85053-1_5][application]
+## Troubleshooting and reproducibility
+
+| Symptom | What to check |
+| --- | --- |
+| Input file missing or unexpected options | Run `pwd`, `which options -all` and `which options_forecast -all`. Check filename spelling, cumulative prefix, column index and four-digit year. |
+| `SpatialWave:FinalFitResultsRequired`, rank mismatch or missing $R_t$ fit | Run the fit for the same area, origin and settings. Keep its final ranking with the rank files produced in that run. |
+| `SpatialWave:PatchLimitBinding` | Extra components start as soon as the forecast permits them in many bootstrap curves. Compare with a fit allowing a larger `npatches_fixed`. |
+| `SpatialWave:SameCurveModels` | Two candidates produce the same calibration curve. Their forecasts can diverge when a previously unreached threshold is crossed. |
+| `SpatialWave:BootstrapAtBound` or `SpatialWave:NotIdentified` | Inspect search bounds, interval widths, boundary-hit fractions and parameter trade-offs before interpreting an estimate. |
+| Forecast scoring stops or an origin is skipped | Check that the later file has observations through the last target date, and compare its start date, sampling interval and columns with the calibration file. For rolling runs inspect `R.notes`. |
+
+For a reproducible analysis, retain the Git commit (`git rev-parse HEAD`), MATLAB and toolbox versions (`ver`), active option files, exact input snapshots, and the final ranking with its rank files. The fit and forecast drivers apply `rngSeed` internally (default `1`). To use a caller-controlled random stream, set `U.rngSeed = [];` in the advanced settings. Include the command, settings and complete error text when opening a [GitHub issue][issues].
+
+## Citation
+
+Cite the toolbox tutorial and report the code revision used. The tutorial and video cover the original workflow. The commands above correspond to the current repository layout.
+
+- **Toolbox tutorial.** Chowell G, Tariq A, Dahal S, Bleichrodt A, Luo R, Hyman JM. SpatialWavePredict: a tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework. *BMC Medical Research Methodology*. 2024, 24, 131. [Article][tutorial] · [Video walkthrough][video]
+- **Original framework.** Chowell G, Tariq A, Hyman JM. A novel sub-epidemic modeling framework for short-term forecasting epidemic waves. *BMC Medicine*. 2019, 17, 164. [Article][framework]
+- **Forecasting application.** Chowell G, Rothenberg R, Roosa K, Tariq A, Hyman JM, Luo R. Sub-epidemic Model Forecasts During the First Wave of the COVID-19 Pandemic in the USA and European Hotspots. In *Mathematics of Public Health*. 2022, pp. 85–137. [Chapter][application]
 
 ## License
 
-Distributed under the **GNU General Public License, version 3**. See [LICENSE](LICENSE) for the terms. The software is provided without warranty.
+SpatialWavePredict is distributed under the GNU General Public License, version 3. [License terms](LICENSE)
 
+[revision]: https://github.com/gchowell/SpatialWavePredict-Toolbox/tree/d17f624944ead9fb41406ac907c1d1e30750ec37
+[output-tag]: spatialWave_subepidemicFramework%20code/spatialWaveOutputTag.m
+[cleanup]: spatialWave_subepidemicFramework%20code/cleanup_leftover_files.m
+[presets]: spatialWave_subepidemicFramework%20code/option_presets/README.md
+[quantiles]: spatialWave_subepidemicFramework%20code/computeQuantiles.m
+[fit-revision]: spatialWave_subepidemicFramework%20code/spatialWaveFitRevision.m
 [tutorial]: https://doi.org/10.1186/s12874-024-02241-2
 [framework]: https://doi.org/10.1186/s12916-019-1406-6
 [application]: https://doi.org/10.1007/978-3-030-85053-1_5
 [video]: https://www.youtube.com/watch?v=qxuF_tTzcR8
 [issues]: https://github.com/gchowell/SpatialWavePredict-Toolbox/issues
-[fmincon-doc]: https://www.mathworks.com/help/optim/ug/fmincon.html
-[multistart-doc]: https://www.mathworks.com/help/gads/multistart.html
-[normrnd-doc]: https://www.mathworks.com/help/stats/normrnd.html
-[runner]: spatialWave_subepidemicFramework%20code/Run_SW_subepidemicFramework.m
-[data-loader]: spatialWave_subepidemicFramework%20code/getData.m
-[ranking-loader]: spatialWave_subepidemicFramework%20code/loadSpatialWaveFinalRanking.m
+[options]: spatialWave_subepidemicFramework%20code/options.m
+[forecast-options]: spatialWave_subepidemicFramework%20code/options_forecast.m
+[overrides]: spatialWave_subepidemicFramework%20code/options_fit_settings_sw.m
+[rt-options]: spatialWave_subepidemicFramework%20code/options_Rt_sw.m
+[errors]: spatialWave_subepidemicFramework%20code/spatialWaveErrorStructure.m
+[fit-series]: spatialWave_subepidemicFramework%20code/spatialWaveFitSeries.m
 [weights]: spatialWave_subepidemicFramework%20code/getSpatialWaveAICcWeights.m
 [ode]: spatialWave_subepidemicFramework%20code/modifiedLogisticGrowthPatch.m
 [simulator]: spatialWave_subepidemicFramework%20code/simulateSpatialWave.m
 [settings]: spatialWave_subepidemicFramework%20code/spatialWaveFitSettings.m
-[metrics]: spatialWave_subepidemicFramework%20code/computeforecastperformance.m
+[rolling]: spatialWave_subepidemicFramework%20code/spatialWaveRollingForecast.m
+[model-error]: spatialWave_subepidemicFramework%20code/spatialWaveModelErrorIntervals.m
+[pii]: spatialWave_subepidemicFramework%20code/spatialWaveIdentifiability.m
+[rt]: spatialWave_subepidemicFramework%20code/spatialWaveReproductionNumber.m
