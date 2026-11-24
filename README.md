@@ -44,6 +44,7 @@ The shipped settings request a parallel pool. For a serial run, edit the existin
 ```matlab
 addpath(fullfile(pwd,'tests'))
 spatialWaveSelfCheck();
+spatialWaveEnsembleCheck();   % ensemble weights, weighted quantiles and scores
 ```
 
 ### 2. Fit, inspect and forecast
@@ -139,7 +140,7 @@ The components share the growth coefficient $r$ and early-growth exponent $p$. T
 
 With the shipped settings, Poisson and negative-binomial objectives use raw counts. Least squares uses a moving average when `smoothfactor1 > 1`. Smoothing reduces day-to-day residual variation and can produce narrow prediction intervals when evaluated against reported counts. For an unsmoothed fit, set `smoothfactor1 = 1`. Optional weekday adjustment for daily data estimates reporting factors from the calibration window. It needs at least 21 observations and sufficient data for each weekday. Keep smoothing off when using it, and compare its performance on held-out observations. The AICc calculation omits the weekday factors from its parameter count. [Fitted-series rules][fit-series] · [Advanced settings][settings]
 
-**Rankings and ensembles.** The runner screens candidates, refits the selected models, then recomputes AICc for each accepted refit. The resulting rank 1 has the lowest AICc among those refits. Ensemble($k$) combines the first $k$ ranks. The shipped `weight_type1 = 1` uses normalized Akaike weights proportional to $\exp[-(\mathrm{AICc}_i-\mathrm{AICc}_{\min})/2]$. Other choices are `-1` (equal weights), `0` (legacy inverse AICc, requiring positive scores) and `2` (inverse calibration WIS). The last choice requires scoring to be enabled and uses in-sample scores. The ensemble plotting routine has three panels for ensemble sizes two through four. Evaluate forecast skill at later dates. [Weight calculation][weights]
+**Rankings and ensembles.** The runner screens candidates, refits the selected models, then recomputes AICc for each accepted refit. The resulting rank 1 has the lowest AICc among those refits. Ensemble($k$) combines the first $k$ ranks as a weighted mixture: it pools every trajectory of every member, and each trajectory carries its member's weight divided by that member's number of trajectories. The ensemble's median, intervals, quantiles and scores are weighted quantiles. No trajectories are drawn at random, so an ensemble depends on the random seed only through its members. The shipped `weight_type1 = 1` uses normalized Akaike weights proportional to $\exp[-(\mathrm{AICc}_i-\mathrm{AICc}_{\min})/2]$. Other choices are `-1` (equal weights) and `2` (inverse calibration WIS). The last choice requires scoring to be enabled, needs finite and positive scores, and uses in-sample scores. Code `0` is a legacy code: it used to be inverse AICc, which is not a weight, and now returns the Akaike weights of `1` with a warning. The ensemble figure has one panel per ensemble, three per row. Evaluate forecast skill at later dates. [Weight calculation][weights] · [Weighted quantile][weighted-quantile]
 
 <a id="evaluating-forecasts-over-many-dates"></a>
 
@@ -283,7 +284,8 @@ SpatialWavePredict is distributed under the GNU General Public License, version 
 [rt-options]: spatialWave_subepidemicFramework%20code/options_Rt_sw.m
 [errors]: spatialWave_subepidemicFramework%20code/spatialWaveErrorStructure.m
 [fit-series]: spatialWave_subepidemicFramework%20code/spatialWaveFitSeries.m
-[weights]: spatialWave_subepidemicFramework%20code/getSpatialWaveAICcWeights.m
+[weights]: spatialWave_subepidemicFramework%20code/spatialWaveEnsembleWeights.m
+[weighted-quantile]: spatialWave_subepidemicFramework%20code/spatialWaveWeightedQuantile.m
 [ode]: spatialWave_subepidemicFramework%20code/modifiedLogisticGrowthPatch.m
 [simulator]: spatialWave_subepidemicFramework%20code/simulateSpatialWave.m
 [settings]: spatialWave_subepidemicFramework%20code/spatialWaveFitSettings.m
