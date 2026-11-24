@@ -156,6 +156,12 @@ end
 % the prime factors was too small for 16, 24, 32, ... models).
 [rows,cols]=spatialWavePanelGrid(length(topmodels1));
 
+% Revision SW-10: Ensemble(2) to Ensemble(n) take one panel each of figure 500,
+% three per row. The grid was fixed at 1 by 3 inside getensemblesubepidemics.m,
+% so the ensemble of five models asked for a fourth panel and the run stopped.
+% Up to four models the grid is 1 by 3, as before.
+ensemblePanelGrid=[max(1,ceil((length(topmodels1)-1)/3)) 3];
+
 % <==============================================================================>
 % <========================== Forecasting parameters ============================>
 % <==============================================================================>
@@ -178,10 +184,10 @@ printscreen1=1; % print plots with the results
 % <==============================================================================>
 
 if exist('weight_type1_pass','var')==1 & isempty(weight_type1_pass)==0
-    weight_type1=weight_type1_pass; % -1= equally weighted from the top models, 0=based on AICc, 1= based on relative likelihood (Akaike weights), 2=based on WISC during calibration, 3=based on WISF during forecasting performance at previous time period (week)
+    weight_type1=weight_type1_pass; % -1= equally weighted from the top models, 0=same as 1 (it was 1/AICc, which is not a weight), 1= based on relative likelihood (Akaike weights), 2=based on WISC during calibration, 3=based on WISF during forecasting performance at previous time period (week)
 
 else
-    weight_type1=weight_type1_INP; % -1= equally weighted from the top models, 0=based on AICc, 1= based on relative likelihood (Akaike weights), 2=based on WISC during calibration, 3=based on WISF during forecasting performance at previous time period (week)
+    weight_type1=weight_type1_INP; % -1= equally weighted from the top models, 0=same as 1 (it was 1/AICc, which is not a weight), 1= based on relative likelihood (Akaike weights), 2=based on WISC during calibration, 3=based on WISF during forecasting performance at previous time period (week)
 end
 
 
@@ -819,9 +825,9 @@ for run_id=-1
             %[RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1]=getensemblesubepidemics(cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,smoothfactor1,outbreakx,caddate1,flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,printscreen1);
 
             if run_id==0
-                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cumulative1,cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype,flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISC_hash,printscreen1);
+                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cumulative1,cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype,flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISC_hash,printscreen1,ensemblePanelGrid);
             else
-                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cumulative1,cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype, flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISF_hash(:,run_id),printscreen1);
+                [RMSECS_model1 MSECS_model1 MAECS_model1  PICS_model1 MISCS_model1 WISC RMSEFS_model1 MSEFS_model1 MAEFS_model1 PIFS_model1 MISFS_model1 WISFS forecast1 quantilesc quantilesf]=getensemblesubepidemics(cumulative1,cadfilename2,datevecfirst1,npatches_fixed,onset_fixed,typedecline2,smoothfactor1,outbreakx,cadregion,caddate1,caddisease,datatype, flag1,method1,dist1,calibrationperiod1,1:rankx,forecastingperiod,getperformance,weight_type1,WISC_hash,WISF_hash(:,run_id),printscreen1,ensemblePanelGrid);
             end
 
             quantilescs=[quantilescs;quantilesc];

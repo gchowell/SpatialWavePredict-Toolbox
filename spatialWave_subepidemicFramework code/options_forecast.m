@@ -24,6 +24,9 @@ forecastingperiod = 30; % Integer variable specifying the forecast horizon:
 
 weight_type1 = 1; % Integer variable specifying the weighting scheme for the ensemble:
                   % -1 = Equally weighted ensemble from the top models.
-                  %  0 = Weighted ensemble based on AICc (Akaike Information Criterion corrected).
+                  %  0 = Same as 1. It used to be 1/AICc, which is not a weight; the code now warns and uses Akaike weights.
                   %  1 = Weighted ensemble based on relative likelihood (Akaike weights).
                   %  2 = Weighted ensemble based on the Weighted Interval Score during calibration (WISC).
+                  %  3 = Weighted ensemble based on the Weighted Interval Score of earlier forecasts (WISF);
+                  %      in a single run the driver supplies WISC, so it equals 2.
+                  % Codes 2 and 3 need getperformance = 1 and finite, positive scores.
