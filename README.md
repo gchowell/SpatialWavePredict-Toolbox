@@ -4,8 +4,6 @@ SpatialWavePredict is a MATLAB toolbox for fitting epidemic curves and generatin
 
 The toolbox ranks fitted models by the corrected Akaike information criterion (AICc), generates individual and ensemble forecasts, and scores them against a flat baseline. It also reports practical parameter identifiability and estimates the effective reproduction number from the fitted incidence curve.
 
-**Revision SW-9** adds the sub-epidemic cap, smoothing span and calibration-window length to result-table filenames. Readers updating scripts that import CSVs can find a worked filename below. [Output files](#output-files) · [Changes for existing users](#changes-for-existing-users) · [Source revision, November 22, 2026][revision]
-
 [Quick start](#quick-start) · [Use your own data](#use-your-own-data) · [Model and settings](#model-and-settings) · [Evaluate forecasts](#evaluate-forecasts-across-dates) · [Parameter identifiability](#parameter-identifiability) · [Reproduction number](#effective-reproduction-number) · [Output files](#output-files) · [Citation](#citation)
 
 ## Quick start
@@ -27,10 +25,9 @@ cd('spatialWave_subepidemicFramework code')
 addpath(pwd)
 if ~isfolder('output'), mkdir('output'); end
 which options -all
-which plotForecast_SW_subepidemicFramework -all
 ```
 
-The first result of each `which` command should be in the current folder. There is a second forecast script at the repository root, and other toolboxes such as SubEpiPredict also provide an `options.m`.
+The first result should be the `options.m` in the current folder. Other toolboxes, such as SubEpiPredict, also provide an `options.m`.
 
 | MATLAB product | Used for |
 | --- | --- |
@@ -63,7 +60,7 @@ plotFit_SW_subepidemicFramework(area, origin);
 [~, ~, ~, scores] = plotForecast_SW_subepidemicFramework(area, origin, horizon, weightType);
 ```
 
-**What this run fits.** The shipped [options.m][options] uses a seven-day moving average, least squares with normal errors, 20 search start points and 300 bootstrap realizations per selected model. Its calibration window is capped at 90 observations. The example snapshot contains 75 daily observations, starting February 27, so all 75 enter calibration. The search allows up to **six** sub-epidemics, considers **both** exponential and power-law size decline, and selects up to four models for refitting. Run the fit even if `output/` contains bundled examples. The current plotting workflow needs the final ranking and its matching rank files.
+**What this run fits.** The shipped [options.m][options] uses a seven-day moving average, least squares with normal errors, 20 search start points and 300 bootstrap realizations per selected model. Its calibration window is capped at 90 observations. The example snapshot contains 75 daily observations, starting February 27, so all 75 enter calibration. The search allows up to **six** sub-epidemics, considers **both** exponential and power-law size decline, and selects up to four models for refitting. Run the fit first: the plotting workflow needs the final ranking and its matching rank files.
 
 ![Top-ranked model showing bootstrap parameter distributions, fitted case counts, the overlapping sub-epidemics and residuals over time.](docs/images/model_fit.png)
 
@@ -165,7 +162,7 @@ The baseline predicts the recent mean at every horizon (last seven observations 
 
 Inspect `R.byDate` for differences across origins and `R.status` and `R.notes` for skipped dates or warnings. Overlapping horizons share target observations, so the three example dates illustrate the workflow and give limited evidence about comparative skill.
 
-**Data vintages and saved fits.** The rolling driver uses an existing, correctly sized snapshot for each origin. If one is missing, it writes the prefix of the later verification file to `input/`. Such a reconstruction can include revisions made after the origin. Use archived snapshots to evaluate forecasts with counts available at the time. The driver checks fit settings and the fitting revision when reusing a result. After correcting data, update the affected origin files and pass `'refit', true` to rebuild those fits. [Rolling forecast driver][rolling]
+**Data vintages and saved fits.** The rolling driver uses an existing, correctly sized snapshot for each origin. If one is missing, it writes the prefix of the later verification file to `input/`. Such a reconstruction can include revisions made after the origin. Use archived snapshots to evaluate forecasts with counts available at the time. The bundled 2020 U.S. snapshots, including the three origins above, were built this way from the May 31, 2021 file, so they carry later revisions. [Input data][input-readme] The driver checks fit settings and the fitting revision when reusing a result. After correcting data, update the affected origin files and pass `'refit', true` to rebuild those fits. [Rolling forecast driver][rolling]
 
 **Intervals adjusted for earlier forecast errors.** The shipped override enables `modelErrorIntervals` for rolling evaluation. Alongside the original scores, `R.adjustedScores` and `R.adjustedSummary` show the effect of widening model intervals using past forecast errors whose target dates have already passed by the new origin. The adjustment preserves the median. With fewer than ten eligible errors at the default settings, it reports a scale factor of one. Compare coverage and WIS together because an interval can gain coverage simply by becoming wider. [Interval adjustment][model-error]
 
@@ -226,8 +223,8 @@ Rows 76–78 are the first three forecast days in this example. To check another
 
 ### Changes for existing users
 
-- **CSV imports.** Earlier output tables keep their old names. A broad pattern such as `ranked(1)-*.csv` can now match multiple settings and older files for the same origin. Use the new tag plus the dataset, origin and horizon when selecting a table. The existing MAT-file naming scheme and the fitting revision (`SW-2`) carry forward. A compatible saved fit can be used to regenerate tables by rerunning the corresponding plot or forecast command. [Output tag][output-tag] · [Fit revision][fit-revision]
-- **Option presets.** In this checkout the historical preset scripts are in the code directory. Running `cleanup_leftover_files()` there previews the files the utility would move. To apply the displayed moves, run `cleanup_leftover_files(true)`, followed by `rehash; clear functions`. The utility moves preset files to `option_presets/` and designated obsolete files and editor autosaves to `removed_files/`. This housekeeping step is optional. To use a historical preset, copy the relevant assignments into the active options file and keep its function signature. In particular, `options_mpox.m`, `options_mpx2.m` and `optionsx.m` have an older output layout. [Cleanup utility][cleanup] · [Preset guide][presets]
+- **CSV imports.** Revision SW-9 adds the sub-epidemic cap, smoothing span and calibration-window length to result-table filenames ([source revision, November 22, 2026][revision]). Earlier output tables keep their old names. A broad pattern such as `ranked(1)-*.csv` can now match multiple settings and older files for the same origin. Use the new tag plus the dataset, origin and horizon when selecting a table. The existing MAT-file naming scheme and the fitting revision (`SW-2`) carry forward. A compatible saved fit can be used to regenerate tables by rerunning the corresponding plot or forecast command. [Output tag][output-tag] · [Fit revision][fit-revision]
+- **Option presets.** The historical preset scripts are in `option_presets/`, and earlier helper scripts are in `legacy/`. If an older working copy still has presets in the code directory, running `cleanup_leftover_files()` there previews the files the utility would move. To apply the displayed moves, run `cleanup_leftover_files(true)`, followed by `rehash; clear functions`. The utility moves preset files to `option_presets/` and designated obsolete files and editor autosaves to `removed_files/`. This housekeeping step is optional. To use a historical preset, copy the relevant assignments into the active options file and keep its function signature. In particular, `options_mpox.m`, `options_mpx2.m` and `optionsx.m` have an older output layout. [Cleanup utility][cleanup] · [Preset guide][presets]
 - **Quantile helper.** The function declaration in `computeQuantiles.m` now matches its filename. For scripts that already have observation-scale draws, `[Qcal,Qforecast,levels] = computeQuantiles(data1,curvesforecasts2,horizon)` returns separate calibration and forecast matrices plus their quantile levels. Rows of the draws matrix run in time order, with one column per simulated trajectory. [Quantile helper][quantiles]
 
 ### Example figures
@@ -257,7 +254,7 @@ For a reproducible analysis, retain the Git commit (`git rev-parse HEAD`), MATLA
 
 ## Citation
 
-Cite the toolbox tutorial and report the code revision used. The tutorial and video cover the original workflow. The commands above correspond to the current repository layout.
+Cite the toolbox tutorial and report the release you used. The repository's [CITATION.cff](CITATION.cff) gives both, and GitHub shows it under **Cite this repository**. The tutorial and video cover the original workflow. The commands above correspond to the current repository layout.
 
 - **Toolbox tutorial.** Chowell G, Tariq A, Dahal S, Bleichrodt A, Luo R, Hyman JM. SpatialWavePredict: a tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework. *BMC Medical Research Methodology*. 2024, 24, 131. [Article][tutorial] · [Video walkthrough][video]
 - **Original framework.** Chowell G, Tariq A, Hyman JM. A novel sub-epidemic modeling framework for short-term forecasting epidemic waves. *BMC Medicine*. 2019, 17, 164. [Article][framework]
@@ -293,3 +290,4 @@ SpatialWavePredict is distributed under the GNU General Public License, version 
 [model-error]: spatialWave_subepidemicFramework%20code/spatialWaveModelErrorIntervals.m
 [pii]: spatialWave_subepidemicFramework%20code/spatialWaveIdentifiability.m
 [rt]: spatialWave_subepidemicFramework%20code/spatialWaveReproductionNumber.m
+[input-readme]: spatialWave_subepidemicFramework%20code/input/README.md

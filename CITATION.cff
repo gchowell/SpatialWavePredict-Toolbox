@@ -1,0 +1,69 @@
+cff-version: 1.2.0
+message: "If you use SpatialWavePredict, please cite the tutorial paper below (preferred citation). To cite the exact software version you used, cite this release."
+title: "SpatialWavePredict: a MATLAB toolbox for fitting and forecasting epidemic trajectories using the spatial wave sub-epidemic framework"
+type: software
+version: "2.0.0"
+date-released: "2026-11-26"
+license: GPL-3.0
+repository-code: "https://github.com/gchowell/SpatialWavePredict-Toolbox"
+keywords:
+  - epidemic forecasting
+  - spatial wave sub-epidemic model
+  - ensemble forecasting
+  - growth models
+  - weighted interval score
+  - MATLAB
+authors:
+  - family-names: Chowell
+    given-names: Gerardo
+    email: gchowell@gsu.edu
+    affiliation: "Department of Population Health Sciences, School of Public Health, Georgia State University"
+  - family-names: Tariq
+    given-names: Amna
+  - family-names: Dahal
+    given-names: Sushma
+    affiliation: "Department of Population Health Sciences, School of Public Health, Georgia State University"
+  - family-names: Bleichrodt
+    given-names: Amanda
+    affiliation: "Department of Population Health Sciences, School of Public Health, Georgia State University"
+  - family-names: Luo
+    given-names: Ruiyan
+    affiliation: "Department of Population Health Sciences, School of Public Health, Georgia State University"
+  - family-names: Hyman
+    given-names: James M.
+preferred-citation:
+  type: article
+  title: "SpatialWavePredict: a tutorial-based primer and toolbox for forecasting growth trajectories using the ensemble spatial wave sub-epidemic modeling framework"
+  authors:
+    - family-names: Chowell
+      given-names: Gerardo
+    - family-names: Tariq
+      given-names: Amna
+    - family-names: Dahal
+      given-names: Sushma
+    - family-names: Bleichrodt
+      given-names: Amanda
+    - family-names: Luo
+      given-names: Ruiyan
+    - family-names: Hyman
+      given-names: James M.
+  journal: "BMC Medical Research Methodology"
+  volume: 24
+  start: 131
+  year: 2024
+  doi: "10.1186/s12874-024-02241-2"
+references:
+  - type: article
+    title: "A novel sub-epidemic modeling framework for short-term forecasting epidemic waves"
+    authors:
+      - family-names: Chowell
+        given-names: Gerardo
+      - family-names: Tariq
+        given-names: Amna
+      - family-names: Hyman
+        given-names: James M.
+    journal: "BMC Medicine"
+    volume: 17
+    start: 164
+    year: 2019
+    doi: "10.1186/s12916-019-1406-6"
